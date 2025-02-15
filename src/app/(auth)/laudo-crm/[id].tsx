@@ -178,6 +178,7 @@ export default function LaudoCrm() {
   useFocusEffect(
     useCallback(() => {
       console.log('formPtpId', formPtpId);
+      console.log('formPtpId', formPtpId);
       if (selectedFormPtp) {
         // loadFormPtp();
         setNotaFiscal(selectedFormPtp?.notaFiscal!);
@@ -185,7 +186,10 @@ export default function LaudoCrm() {
         setLotes(selectedFormPtp?.lotes!?.map(lote => lote).join(', '));
         setCodigoProdutos(
           selectedFormPtp
-            ?.codigoProdutos!?.map(codProduto => codProduto)
+            ?.codigoProdutos!?.filter(
+              item => !(Array.isArray(item) && item?.length === 0),
+            )
+            .map(codProduto => codProduto)
             ?.join(', '),
         );
         setNaoConformidadesList(selectedFormPtp?.detalheNaoConformidade!);

@@ -296,15 +296,30 @@ export default function FormPtp() {
             detalheNaoConformidade: itensProcessados
               ?.map(item => item?.detalheNaoConformidade)
               ?.filter(Boolean)
-              ?.flatMap(item => item)
-              ?.filter(
-                item => !(Array.isArray(item) && item?.length === 0),
-              ) as string[],
+              ?.flatMap(item => item) as string[],
           });
 
-          push(`/(auth)/laudo-crm/${selectedFormPtp?.id}`);
+          return Alert.alert(
+            'Sucesso!',
+            'Respostas do PTP cadastradas com sucesso! \n Você será redirecionado para preencher o Laudo CRM',
+            [
+              {
+                text: 'Fechar',
+                onPress: () => push(`/(auth)/laudo-crm/${selectedFormPtp?.id}`),
+              },
+            ],
+          );
         } else {
-          replace('/(auth)/dashboard');
+          return Alert.alert(
+            'Sucesso!',
+            'Respostas do PTP cadastradas com sucesso! \n Não há necessidade de preencher o Laudo CRM',
+            [
+              {
+                text: 'Fechar',
+                onPress: () => replace('/(auth)/dashboard'),
+              },
+            ],
+          );
         }
       } else {
         Alert.alert(

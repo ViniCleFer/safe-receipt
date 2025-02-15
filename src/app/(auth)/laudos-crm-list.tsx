@@ -14,6 +14,8 @@ import { supabase } from '@/lib/supabase';
 import { LaudoCrmWithAnswer } from '@/services/requests/laudos/types';
 import { getLaudosCrmRequest } from '@/services/requests/laudos/utils';
 
+import { tiposNaoConformidade as tiposNaoConformidadeList } from '@/utils/tiposNaoConformidade';
+
 export default function LuadoCrmList() {
   const { colors } = useTheme();
 
@@ -61,7 +63,57 @@ export default function LuadoCrmList() {
             ];
           }
 
-          setLaudosCrmList([...laudosCrm]);
+          const tiposNaoConformidadeFormatted = laudosCrm.map(laudo => {
+            const tiposNaoConformidade = laudo?.tiposNaoConformidade;
+            const lotes = laudo?.lotes;
+            const codigosProdutos = laudo?.codigoProdutos;
+
+            let tiposNaoConformidadeFormatted = '';
+
+            if (tiposNaoConformidade?.length > 0) {
+              tiposNaoConformidadeFormatted = tiposNaoConformidade
+                .map(
+                  (tipo: string) =>
+                    '- ' +
+                    tiposNaoConformidadeList?.find(item => item?.value === tipo)
+                      ?.label,
+                )
+                .join('\n');
+            } else {
+              tiposNaoConformidadeFormatted = 'Sem tipos de não conformidade';
+            }
+
+            let lotesFormatted = '';
+
+            if (lotes?.length > 0) {
+              lotesFormatted = lotes
+                .map((lote: string) => '- ' + lote)
+                .join('\n');
+            } else {
+              lotesFormatted = 'Sem lotes cadastrados';
+            }
+
+            let codigosProdutosFormatted = '';
+
+            if (codigosProdutos?.length > 0) {
+              codigosProdutosFormatted = codigosProdutos
+                .map((codigoProduto: string) => '- ' + codigoProduto)
+                .join('\n');
+            } else {
+              codigosProdutosFormatted = 'Sem códigos de produtos cadastrados';
+            }
+
+            return {
+              ...laudo,
+              tiposNaoConformidade: tiposNaoConformidadeFormatted,
+              lotes: lotesFormatted,
+              codigosProdutos: codigosProdutosFormatted,
+            };
+          });
+
+          console.log('laudosCrm => ', JSON.stringify(laudosCrm, null, 2));
+
+          setLaudosCrmList([...tiposNaoConformidadeFormatted]);
         }
       }
     } catch (error) {
