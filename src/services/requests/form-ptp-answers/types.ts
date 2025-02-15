@@ -31,7 +31,7 @@ export interface FormPtpAnswerPost {
   qtdAnalisada: number;
   codProduto: string;
   naoConformidade: boolean;
-  detalheNaoConformidade: string;
+  detalheNaoConformidade: string[] | any[];
   lote: string | null;
   qtdPalletsNaoConforme: number;
   qtdCaixasNaoConforme: number;

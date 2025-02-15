@@ -14,6 +14,10 @@ export interface Enunciado {
   canceled_at: Date | null;
 }
 
+export interface EnunciadoToList extends Enunciado {
+  index: number;
+}
+
 export interface EnunciadoPost {
   descricao: string;
   posicao: number;

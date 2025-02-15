@@ -22,17 +22,21 @@ import {
 } from 'native-base';
 import { Alert, StyleSheet, TouchableOpacity } from 'react-native';
 import { shade } from 'polished';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 
-import { Button } from '@/components/Button';
-import { Loading } from '@/components/Loading';
-import { ScrollScreenContainer } from '@/components/ScrollScreenContainer';
+import { Button } from '../../../components/Button';
+import { Loading } from '../../../components/Loading';
+import { ScrollScreenContainer } from '../../../components/ScrollScreenContainer';
 
-import {
-  DivergenciaPost,
-  TipoDivergencia,
-} from '@/services/requests/divergences/types';
+import { TipoDivergencia } from '@/services/requests/divergences/types';
 import { createDivergenceRequest } from '@/services/requests/divergences/utils';
 import { router, useLocalSearchParams } from 'expo-router';
+import { supabase } from '@/lib/supabase';
+import { generateFolderName } from '@/utils/generateFoldername';
+import useAuthStore from '@/store/auth';
+import { decode } from 'base64-arraybuffer';
 
 const styles = StyleSheet.create({
   container: {
@@ -53,13 +57,34 @@ const styles = StyleSheet.create({
   },
 });
 
+const formDivergenceSchema = z.object({
+  respostas: z
+    .array(
+      z.object({
+        tipoDivergencia: z.string().min(1, 'Campo obrigatório'),
+        evidencias: z.array(z.string()).optional(),
+        skuFaltandoFisicamente: z.string().optional(),
+        qtdFaltandoFisicamente: z.number().optional(),
+        skuSobrandoFisicamente: z.string().optional(),
+        qtdSobrandoFisicamente: z.number().optional(),
+        skuRecebemosFisicamente: z.string().optional(),
+        qtdRecebemosFisicamente: z.number().optional(),
+        skuNotaFiscal: z.string().optional(),
+        qtdNotaFiscal: z.number().optional(),
+        proximoPasso: z.string().min(1, 'Campo obrigatório'),
+        user_id: z.string().min(1, 'Campo obrigatório'),
+      }),
+    )
+    .nonempty(),
+});
+
 export default function Divergency() {
   const { colors } = useTheme();
 
   const { back } = router;
   const { type } = useLocalSearchParams<{ type: string }>();
 
-  console.log('routes', type);
+  const user = useAuthStore(state => state.user);
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -79,6 +104,24 @@ export default function Divergency() {
   useEffect(() => {
     requestPermission();
   }, []);
+
+  const { control, handleSubmit, watch, getValues } = useForm({
+    resolver: zodResolver(formDivergenceSchema),
+    defaultValues: {
+      tipoDivergencia: '',
+      evidencias: [],
+      skuFaltandoFisicamente: '',
+      qtdFaltandoFisicamente: 0,
+      skuSobrandoFisicamente: '',
+      qtdSobrandoFisicamente: 0,
+      skuRecebemosFisicamente: '',
+      qtdRecebemosFisicamente: 0,
+      skuNotaFiscal: '',
+      qtdNotaFiscal: 0,
+      proximoPasso: '',
+      user_id: '',
+    },
+  });
 
   if (!permission?.granted) {
     console.log('Não permitiu');
@@ -110,7 +153,7 @@ export default function Divergency() {
     sku: string,
     quantidade: string,
     skuNotaFiscal: string,
-    quantidadeNotaFiscal: string
+    quantidadeNotaFiscal: string,
   ) => {
     const nextSteps = {
       [TipoDivergencia.FALTA]: `Solicitar o envio do saldo para a origem. (${sku} - ${quantidade})`,
@@ -136,7 +179,7 @@ export default function Divergency() {
     setLoadingPreview(true);
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.All,
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         base64: true,
         quality: 1,
@@ -152,7 +195,7 @@ export default function Divergency() {
 
         console.log('result', JSON.stringify(result, null, 2));
 
-        setImagesList((prevState) => [
+        setImagesList(prevState => [
           ...prevState,
           { uri, base64: fileBase64, mimetype, filename, size },
         ]);
@@ -181,7 +224,7 @@ export default function Divergency() {
 
         console.log('photo', JSON.stringify(photo, null, 2));
 
-        setImagesList((prevState) => [
+        setImagesList(prevState => [
           ...prevState,
           { uri: photo?.uri, base64: photo?.base64, filename, mimetype, size },
         ]);
@@ -214,12 +257,12 @@ export default function Divergency() {
     }
   }, [permission, requestPermission, imagesList]);
 
-  const handleSaveEvent = useCallback(async () => {
+  const handleSaveDivergence = useCallback(async () => {
     if (!sku || !quantidade || imagesList?.length === 0) {
       setIsLoading(false);
       return Alert.alert(
         'Cadastro de Divergência',
-        'Por favor, preencha todos os campos para cadastrar o evento.'
+        'Por favor, preencha todos os campos para cadastrar o evento.',
       );
     }
 
@@ -228,76 +271,160 @@ export default function Divergency() {
         setIsLoading(false);
         return Alert.alert(
           'Cadastro de Divergência',
-          'Por favor, preencha todos os campos para cadastrar o evento.'
+          'Por favor, preencha todos os campos para cadastrar o evento.',
         );
       }
     }
 
     setIsLoading(true);
 
-    try {
+    // try {
+
+    const proximoPasso = getNextStepsByDivergencyType(
+      divergencyType()?.type!,
+      sku,
+      quantidade,
+      skuNotaFiscal,
+      quantidadeNotaFiscal,
+    );
+
+    const data: any = {
+      tipoDivergencia: divergencyType()?.type!,
+      evidencias: [],
+      skuFaltandoFisicamente:
+        divergencyType()?.type === TipoDivergencia.FALTA ? sku : null,
+      qtdFaltandoFisicamente:
+        divergencyType()?.type === TipoDivergencia.FALTA
+          ? Number(quantidade)
+          : null,
+      skuSobrandoFisicamente:
+        divergencyType()?.type === TipoDivergencia.SOBRA ? sku : null,
+      qtdSobrandoFisicamente:
+        divergencyType()?.type === TipoDivergencia.SOBRA
+          ? Number(quantidade)
+          : null,
+      skuRecebemosFisicamente:
+        divergencyType()?.type === TipoDivergencia.INVERSAO ? sku : null,
+      qtdRecebemosFisicamente:
+        divergencyType()?.type === TipoDivergencia.INVERSAO
+          ? Number(quantidade)
+          : null,
+      skuNotaFiscal:
+        divergencyType()?.type === TipoDivergencia.INVERSAO
+          ? skuNotaFiscal
+          : null,
+      qtdNotaFiscal:
+        divergencyType()?.type === TipoDivergencia.INVERSAO
+          ? Number(quantidadeNotaFiscal)
+          : null,
+      proximoPasso,
+      user_id: user?.id,
+    };
+
+    console.log('data', JSON.stringify(data, null, 2));
+    const response = await createDivergenceRequest(data);
+    console.log('response', JSON.stringify(response, null, 2));
+
+    if (response?.status === 201 && response?.data?.length > 0) {
+      // console.log('response', JSON.stringify(response, null, 2));
+
+      // push(`/(home)/enunciado/${routeParams}`);
+
       const evidencias =
         imagesList?.length > 0
-          ? imagesList?.map((i, idx) => {
+          ? imagesList?.map(i => {
               const extension = mime.getExtension(i?.mimetype);
 
               return {
                 base64: i?.base64,
                 mimetype: i?.mimetype,
-                size: i?.size,
                 filename: i?.filename
                   ? i?.filename
-                  : 'arquivo ' + idx + '.' + extension,
+                  : 'arquivo ' + new Date().toString() + '.' + extension,
               };
             })
           : [];
 
-      const proximoPasso = getNextStepsByDivergencyType(
-        divergencyType()?.type!,
-        sku,
-        quantidade,
-        skuNotaFiscal,
-        quantidadeNotaFiscal
-      );
+      if (evidencias?.length > 0) {
+        const folderName = generateFolderName(
+          false,
+          null,
+          response?.data[0]?.id,
+        );
 
-      const data: DivergenciaPost = {
-        tipoDivergencia: divergencyType()?.type!,
-        evidencias,
-        skuFaltandoFisicamente:
-          divergencyType()?.type === TipoDivergencia.FALTA ? sku : null,
-        qtdFaltandoFisicamente:
-          divergencyType()?.type === TipoDivergencia.FALTA
-            ? Number(quantidade)
-            : null,
-        skuSobrandoFisicamente:
-          divergencyType()?.type === TipoDivergencia.SOBRA ? sku : null,
-        qtdSobrandoFisicamente:
-          divergencyType()?.type === TipoDivergencia.SOBRA
-            ? Number(quantidade)
-            : null,
-        skuRecebemosFisicamente:
-          divergencyType()?.type === TipoDivergencia.INVERSAO ? sku : null,
-        qtdRecebemosFisicamente:
-          divergencyType()?.type === TipoDivergencia.INVERSAO
-            ? Number(quantidade)
-            : null,
-        skuNotaFiscal:
-          divergencyType()?.type === TipoDivergencia.INVERSAO
-            ? skuNotaFiscal
-            : null,
-        qtdNotaFiscal:
-          divergencyType()?.type === TipoDivergencia.INVERSAO
-            ? Number(quantidadeNotaFiscal)
-            : null,
-        proximoPasso,
-      };
+        let evidenciasIds: string[] = [];
 
-      const response = await createDivergenceRequest(data);
+        for await (const evidencia of evidencias) {
+          console.log('folderName', folderName);
 
-      if (response?.status === 201) {
-        console.log('response', JSON.stringify(response?.data, null, 2));
+          const { data, error } = await supabase.storage
+            .from(folderName)
+            .upload(evidencia?.filename, decode(evidencia?.base64), {
+              contentType: evidencia?.mimetype,
+              upsert: false,
+            });
 
-        Alert.alert('Próximos Passos', proximoPasso, [
+          delete evidencia.base64;
+
+          console.log('evidencia', JSON.stringify(evidencia, null, 2));
+
+          console.log('test data', JSON.stringify(data, null, 2));
+          console.log('test error', JSON.stringify(error, null, 2));
+
+          if (error !== null) {
+            Alert.alert(
+              'Ops!',
+              'Ocorreu um erro ao salvar as Evidências da Divergência, tente novamente mais tarde.',
+            );
+          }
+
+          console.log('test data', JSON.stringify(data, null, 2));
+          console.log('test error', JSON.stringify(error, null, 2));
+
+          evidenciasIds = [...evidenciasIds, data?.path!];
+        }
+
+        if (evidenciasIds?.length > 0) {
+          const isUnique = evidenciasIds.filter(
+            (value, index, self) => self.indexOf(value) === index,
+          );
+
+          const responseUpdate = await supabase
+            .from('divergencias')
+            .update({
+              evidencias: [...isUnique],
+            })
+            .eq('id', response?.data[0]?.id)
+            .select();
+          console.log(
+            'responseUpdate',
+            JSON.stringify(responseUpdate, null, 2),
+          );
+
+          setIsLoading(false);
+
+          if (responseUpdate?.error !== null) {
+            return Alert.alert(
+              'Ops!',
+              'Ocorreu um erro ao vincular as Evidências a Divergência, tente novamente mais tarde.',
+            );
+          }
+
+          if (responseUpdate?.status === 200) {
+            return Alert.alert('Próximos Passos', proximoPasso, [
+              {
+                text: 'OK, entendi',
+                onPress: () => {
+                  handleBack();
+                },
+              },
+            ]);
+          }
+        }
+      } else {
+        setIsLoading(false);
+
+        return Alert.alert('Próximos Passos', proximoPasso, [
           {
             text: 'OK, entendi',
             onPress: () => {
@@ -305,20 +432,42 @@ export default function Divergency() {
             },
           },
         ]);
-      } else {
-        Alert.alert(
-          'Ops!',
-          'Ocorreu um erro ao salvar a Divergência, tente novamente mais tarde.'
-        );
       }
-    } catch (error) {
-      Alert.alert('Ops!', 'Ocorreu um erro ao salvar a Divergência.');
-      console.log('Error response', JSON.stringify(error, null, 2));
-    } finally {
-      setIsLoading(false);
+    } else {
+      Alert.alert(
+        'Ops!',
+        'Ocorreu um erro ao salvar a Divergência, tente novamente mais tarde.',
+      );
     }
+    setIsLoading(false);
+
+    //   const response = await createDivergenceRequest(data);
+
+    //   if (response?.status === 201) {
+    //     console.log('response', JSON.stringify(response?.data, null, 2));
+
+    //     Alert.alert('Próximos Passos', proximoPasso, [
+    //       {
+    //         text: 'OK, entendi',
+    //         onPress: () => {
+    //           handleBack();
+    //         },
+    //       },
+    //     ]);
+    //   } else {
+    //     Alert.alert(
+    //       'Ops!',
+    //       'Ocorreu um erro ao salvar a Divergência, tente novamente mais tarde.',
+    //     );
+    //   }
+    // } catch (error) {
+    //   Alert.alert('Ops!', 'Ocorreu um erro ao salvar a Divergência.');
+    //   console.log('Error response', JSON.stringify(error, null, 2));
+    // } finally {
+    //   setIsLoading(false);
+    // }
   }, [
-    back,
+    handleBack,
     imagesList,
     divergencyType,
     getNextStepsByDivergencyType,
@@ -326,6 +475,7 @@ export default function Divergency() {
     quantidade,
     skuNotaFiscal,
     quantidadeNotaFiscal,
+    supabase,
   ]);
 
   const handleCancel = useCallback(() => {
@@ -342,7 +492,7 @@ export default function Divergency() {
             handleBack();
           },
         },
-      ]
+      ],
     );
   }, [handleBack]);
 
@@ -359,7 +509,7 @@ export default function Divergency() {
       {loadingPreview && (
         <Loading
           flex={1}
-          height='100%'
+          height="100%"
           position={'absolute'}
           top={0}
           left={0}
@@ -372,12 +522,12 @@ export default function Divergency() {
       <CameraView
         ref={cameraRef}
         style={{ flex: 1, flexDirection: 'row' }}
-        facing='back'
+        facing="back"
       >
-        <Box style={styles.takePictureContainer} backgroundColor='transparent'>
+        <Box style={styles.takePictureContainer} backgroundColor="transparent">
           <TouchableOpacity onPress={takePicture}>
             <Box
-              borderRadius='full'
+              borderRadius="full"
               style={{
                 backgroundColor: '#fff',
                 height: 60,
@@ -391,7 +541,7 @@ export default function Divergency() {
               setIsCameraActive(false);
             }}
           >
-            <MaterialIcons name='cancel' size={40} color='white' />
+            <MaterialIcons name="cancel" size={40} color="white" />
           </TouchableOpacity>
         </Box>
       </CameraView>
@@ -401,7 +551,7 @@ export default function Divergency() {
       {isLoading && (
         <Loading
           flex={1}
-          height='100%'
+          height="100%"
           position={'absolute'}
           top={0}
           left={0}
@@ -415,7 +565,7 @@ export default function Divergency() {
         subtitle={`Divergência - ${divergencyType()?.text}`}
       >
         <VStack px={2}>
-          <Text color='gray.750' mb={4}>
+          <Text color="gray.750" mb={4}>
             Evidência(s)
           </Text>
 
@@ -426,18 +576,18 @@ export default function Divergency() {
                   key={index}
                   space={2}
                   mb={4}
-                  w='full'
-                  justifyContent='space-between'
-                  alignItems='center'
+                  w="full"
+                  justifyContent="space-between"
+                  alignItems="center"
                 >
-                  <HStack space={2} alignItems='center'>
+                  <HStack space={2} alignItems="center">
                     <Image
                       key={index}
                       source={{ uri: image?.uri }}
-                      alt='image'
-                      size='sm'
-                      width='80px'
-                      height='30px'
+                      alt="image"
+                      size="sm"
+                      width="80px"
+                      height="30px"
                     />
 
                     <Text>{index}</Text>
@@ -445,14 +595,14 @@ export default function Divergency() {
                   <Pressable
                     onPress={() => {
                       const newImagesList = imagesList?.filter(
-                        (_, idx) => idx !== index
+                        (_, idx) => idx !== index,
                       );
 
                       setImagesList(newImagesList);
                     }}
                   >
                     <MaterialIcons
-                      name='delete'
+                      name="delete"
                       color={colors.secondary[700]}
                       size={24}
                     />
@@ -463,13 +613,13 @@ export default function Divergency() {
           )}
 
           <HStack
-            alignItems='center'
-            justifyContent='flex-start'
-            mb='24px'
+            alignItems="center"
+            justifyContent="flex-start"
+            mb="24px"
             space={5}
           >
             <Pressable onPress={handlePhotoLibrary}>
-              <MaterialIcons name='photo' color={colors.gray[800]} size={28} />
+              <MaterialIcons name="photo" color={colors.gray[800]} size={28} />
             </Pressable>
             <Pressable
               onPress={() => {
@@ -477,7 +627,7 @@ export default function Divergency() {
               }}
             >
               <MaterialCommunityIcons
-                name='camera'
+                name="camera"
                 color={colors.gray[800]}
                 size={28}
               />
@@ -488,43 +638,45 @@ export default function Divergency() {
         {divergencyType()?.type === TipoDivergencia.FALTA && (
           <VStack px={2} space={6} pt={2}>
             <Box mb={1}>
-              <Text mb={-2} color='gray.750'>
+              <Text mb={-2} color="gray.750">
                 Qual SKU está faltando fisicamente?
               </Text>
               <Input
-                w='full'
-                variant='underlined'
+                w="full"
+                variant="underlined"
                 height={14}
-                size='md'
-                fontSize='md'
+                size="md"
+                fontSize="md"
                 pb={0}
-                placeholderTextColor='gray.700'
+                placeholderTextColor="gray.700"
                 value={sku}
-                onChangeText={(t) => {
+                onChangeText={t => {
                   setSku(t);
                 }}
                 _focus={{ borderColor: 'primary.700' }}
-                autoComplete='off'
+                autoComplete="off"
+                keyboardType="numeric"
               />
             </Box>
             <Box mb={1}>
-              <Text mb={-2} color='gray.750'>
+              <Text mb={-2} color="gray.750">
                 Qual a quantidade que está faltando fisicamente?
               </Text>
               <Input
-                w='full'
-                variant='underlined'
+                w="full"
+                variant="underlined"
                 height={14}
-                size='md'
-                fontSize='md'
+                size="md"
+                fontSize="md"
                 pb={0}
-                placeholderTextColor='gray.700'
+                placeholderTextColor="gray.700"
                 value={quantidade}
-                onChangeText={(t) => {
+                onChangeText={t => {
                   setQuantidade(t);
                 }}
                 _focus={{ borderColor: 'primary.700' }}
-                autoComplete='off'
+                autoComplete="off"
+                keyboardType="numeric"
               />
             </Box>
 
@@ -568,163 +720,134 @@ export default function Divergency() {
         {divergencyType()?.type === TipoDivergencia.SOBRA && (
           <VStack px={2} space={6} pt={2}>
             <Box mb={1}>
-              <Text mb={-2} color='gray.750'>
+              <Text mb={-2} color="gray.750">
                 Qual SKU está sobrando fisicamente?
               </Text>
               <Input
-                w='full'
-                variant='underlined'
+                w="full"
+                variant="underlined"
                 height={14}
-                size='md'
-                fontSize='md'
+                size="md"
+                fontSize="md"
                 pb={0}
-                placeholderTextColor='gray.700'
+                placeholderTextColor="gray.700"
                 value={sku}
-                onChangeText={(t) => {
+                onChangeText={t => {
                   setSku(t);
                 }}
                 _focus={{ borderColor: 'primary.700' }}
-                autoComplete='off'
+                autoComplete="off"
+                keyboardType="numeric"
               />
             </Box>
             <Box mb={1}>
-              <Text mb={-2} color='gray.750'>
+              <Text mb={-2} color="gray.750">
                 Qual a quantidade que está sobrando fisicamente?
               </Text>
               <Input
-                w='full'
-                variant='underlined'
+                w="full"
+                variant="underlined"
                 height={14}
-                size='md'
-                fontSize='md'
+                size="md"
+                fontSize="md"
                 pb={0}
-                placeholderTextColor='gray.700'
+                placeholderTextColor="gray.700"
                 value={quantidade}
-                onChangeText={(t) => {
+                onChangeText={t => {
                   setQuantidade(t);
                 }}
                 _focus={{ borderColor: 'primary.700' }}
-                autoComplete='off'
+                autoComplete="off"
+                keyboardType="numeric"
               />
             </Box>
-
-            {/* {isAlertVisible && (
-              <HStack
-                space={3}
-                alignItems={'center'}
-                background={'gray.100'}
-                py={2}
-                px={4}
-                borderRadius={4}
-              >
-                <MaterialCommunityIcons
-                  name="alert"
-                  color={colors.primary[700]}
-                  size={24}
-                />
-                <VStack>
-                  <Text
-                    fontSize={'md'}
-                    fontWeight={'semibold'}
-                    mb={-2}
-                    color="black"
-                  >
-                    Próximo passo:
-                  </Text>
-                  <Text
-                    fontSize={'md'}
-                    fontWeight={'semibold'}
-                    mt={2}
-                    color="primary.700"
-                  >
-                    {`Solicitar o envio do saldo para a origem. (${sku} - ${quantidade})`}
-                  </Text>
-                </VStack>
-              </HStack>
-            )} */}
           </VStack>
         )}
 
         {divergencyType()?.type === TipoDivergencia.INVERSAO && (
           <VStack px={2} space={6} pt={2}>
             <Box mb={1}>
-              <Text mb={-2} color='gray.750'>
+              <Text mb={-2} color="gray.750">
                 Qual SKU recebemos fisicamente?
               </Text>
               <Input
-                w='full'
-                variant='underlined'
+                w="full"
+                variant="underlined"
                 height={14}
-                size='md'
-                fontSize='md'
+                size="md"
+                fontSize="md"
                 pb={0}
-                placeholderTextColor='gray.700'
+                placeholderTextColor="gray.700"
                 value={sku}
-                onChangeText={(t) => {
+                onChangeText={t => {
                   setSku(t);
                 }}
                 _focus={{ borderColor: 'primary.700' }}
-                autoComplete='off'
+                autoComplete="off"
+                keyboardType="numeric"
               />
             </Box>
             <Box mb={1}>
-              <Text mb={-2} color='gray.750'>
+              <Text mb={-2} color="gray.750">
                 Qual a quantidade que recebemos fisicamente?
               </Text>
               <Input
-                w='full'
-                variant='underlined'
+                w="full"
+                variant="underlined"
                 height={14}
-                size='md'
-                fontSize='md'
+                size="md"
+                fontSize="md"
                 pb={0}
-                placeholderTextColor='gray.700'
+                placeholderTextColor="gray.700"
                 value={quantidade}
-                onChangeText={(t) => {
+                onChangeText={t => {
                   setQuantidade(t);
                 }}
                 _focus={{ borderColor: 'primary.700' }}
-                autoComplete='off'
+                autoComplete="off"
+                keyboardType="numeric"
               />
             </Box>
             <Box mb={1}>
-              <Text mb={-2} color='gray.750'>
+              <Text mb={-2} color="gray.750">
                 Qual SKU está na nota fiscal?
               </Text>
               <Input
-                w='full'
-                variant='underlined'
+                w="full"
+                variant="underlined"
                 height={14}
-                size='md'
-                fontSize='md'
+                size="md"
+                fontSize="md"
                 pb={0}
-                placeholderTextColor='gray.700'
+                placeholderTextColor="gray.700"
                 value={skuNotaFiscal}
-                onChangeText={(t) => {
+                onChangeText={t => {
                   setSkuNotaFiscal(t);
                 }}
                 _focus={{ borderColor: 'primary.700' }}
-                autoComplete='off'
+                autoComplete="off"
+                keyboardType="numeric"
               />
             </Box>
             <Box mb={1}>
-              <Text mb={-2} color='gray.750'>
+              <Text mb={-2} color="gray.750">
                 Qual a quantidade que está na nota fiscal?
               </Text>
               <Input
-                w='full'
-                variant='underlined'
+                w="full"
+                variant="underlined"
                 height={14}
-                size='md'
-                fontSize='md'
+                size="md"
+                fontSize="md"
                 pb={0}
-                placeholderTextColor='gray.700'
+                placeholderTextColor="gray.700"
                 value={quantidadeNotaFiscal}
-                onChangeText={(t) => {
+                onChangeText={t => {
                   setQuantidadeNotaFiscal(t);
                 }}
                 _focus={{ borderColor: 'primary.700' }}
-                autoComplete='off'
+                autoComplete="off"
+                keyboardType="numeric"
               />
             </Box>
 
@@ -765,12 +888,12 @@ export default function Divergency() {
           </VStack>
         )}
 
-        <HStack mt='8%' px={2} width='100%' justifyContent='space-between'>
+        <HStack mt="8%" px={2} width="100%" justifyContent="space-between">
           <Button
-            width='48%'
-            h='50px'
-            backgroundColor='gray.700'
-            title='Cancelar'
+            width="48%"
+            h="50px"
+            backgroundColor="gray.700"
+            title="Cancelar"
             _pressed={{ bg: 'gray.600' }}
             variant={'solid'}
             _text={{
@@ -780,23 +903,23 @@ export default function Divergency() {
               handleCancel();
             }}
             disabled={isLoading}
-            leftIcon={<Icon as={MaterialIcons} name='delete' size='md' />}
+            leftIcon={<Icon as={MaterialIcons} name="delete" size="md" />}
           />
 
           <Button
-            width='48%'
-            h='50px'
-            backgroundColor='primary.700'
-            title='Salvar'
+            width="48%"
+            h="50px"
+            backgroundColor="primary.700"
+            title="Salvar"
             _pressed={{ bg: shade(0.3, '#2e2efe') }}
             variant={'solid'}
             _text={{
               color: 'white',
             }}
-            onPress={handleSaveEvent}
+            onPress={handleSaveDivergence}
             isLoading={isLoading}
             disabled={isLoading}
-            leftIcon={<Icon as={MaterialIcons} name='save' size='md' />}
+            leftIcon={<Icon as={MaterialIcons} name="save" size="md" />}
           />
         </HStack>
       </ScrollScreenContainer>

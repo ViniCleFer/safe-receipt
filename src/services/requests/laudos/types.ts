@@ -1,3 +1,5 @@
+import { FormPtpAnswer } from '../form-ptp-answers/types';
+
 export enum Turno {
   T1 = 'T1',
   T2 = 'T2',
@@ -47,10 +49,15 @@ export interface LaudoCrm {
   upOrigem: string;
   cdOrigem: string;
   tiposNaoConformidade: TipoNaoConformidade[];
-  evidencias: Evidencia[];
+  evidencias: string[];
   created_at: Date;
   updated_at: Date;
   canceled_at: Date | null;
+}
+
+export interface LaudoCrmWithAnswer extends LaudoCrm, FormPtpAnswer {
+  lotes: string[];
+  codigosProdutos: string[];
 }
 
 export interface LaudoCrmPost {
@@ -63,9 +70,12 @@ export interface LaudoCrmPost {
   turno: Turno;
   upOrigem: string;
   cdOrigem: string;
-  tipsoNaoConformidade: TipoNaoConformidade[];
+  tiposNaoConformidade: TipoNaoConformidade[];
   evidencias: EvidenciaPost[];
   form_ptp_id: string;
+  lotes: string[];
+  codigoProdutos: string[];
+  user_id: string;
 }
 
 export interface LaudoCrmPut extends LaudoCrmPost {

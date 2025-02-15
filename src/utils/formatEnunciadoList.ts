@@ -1,13 +1,15 @@
-import { Enunciado } from '@/services/requests/enunciados/types';
+import { EnunciadoToList } from '@/services/requests/enunciados/types';
 import { wordNormalize } from './wordNormalize';
 
-export const formatEnunciadoList = (enunciadoList: Enunciado[]) => {
+export const formatEnunciadoList = (enunciadoList: EnunciadoToList[]) => {
   if (enunciadoList?.length === 0) {
     return [];
   }
 
-  const resultado = enunciadoList?.reduce((acc, item) => {
+  const resultado = enunciadoList?.reduce((acc, item, index) => {
     const { grupo } = item;
+
+    item.index = index;
 
     const existingGroup = acc?.find(group => group?.grupo === grupo);
 
@@ -22,7 +24,7 @@ export const formatEnunciadoList = (enunciadoList: Enunciado[]) => {
     }
 
     return acc;
-  }, []);
+  }, [] as any[]);
 
   return resultado;
 };

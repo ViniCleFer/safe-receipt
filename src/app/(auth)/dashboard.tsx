@@ -10,42 +10,42 @@ export default function Home() {
   const { colors } = useTheme();
 
   const handleCreateFormPtp = useCallback(() => {
-    router.navigate('/(home)/select-form-type');
+    router.navigate('/(auth)/select-form-type-to-register');
   }, [router]);
 
   const handleFormsPtpList = useCallback(() => {
-    router.navigate('/(home)/forms-ptp-list');
+    router.navigate('/(auth)/select-form-type-to-list');
   }, [router]);
 
   return (
     <ScrollScreenContainer>
       <Pressable onPress={handleCreateFormPtp}>
-        <Card bg='white' mt='8px' mb='12px'>
-          <HStack bg='white' alignItems='center' ml='-4px' mb='4px'>
+        <Card bg="white" mt="8px" mb="12px">
+          <HStack bg="white" alignItems="center" ml="-4px" mb="4px">
             <MaterialIcons
-              name='open-in-new'
+              name="open-in-new"
               size={26}
               color={colors.primary[700]}
             />
           </HStack>
 
-          <Text color='gray.700' fontSize='lg' mt={3}>
+          <Text color="gray.700" fontSize="lg" mt={3}>
             Cadastrar Formulários
           </Text>
         </Card>
       </Pressable>
 
       <Pressable onPress={handleFormsPtpList}>
-        <Card bg='white' mt='8px' mb='12px'>
-          <HStack bg='white' alignItems='center' ml='-4px' mb='4px'>
+        <Card bg="white" mt="8px" mb="12px">
+          <HStack bg="white" alignItems="center" ml="-4px" mb="4px">
             <MaterialIcons
-              name='format-list-bulleted'
+              name="format-list-bulleted"
               size={26}
               color={colors.primary[700]}
             />
           </HStack>
 
-          <Text color='gray.700' fontSize='lg' mt={3}>
+          <Text color="gray.700" fontSize="lg" mt={3}>
             Meus Formulários
           </Text>
         </Card>

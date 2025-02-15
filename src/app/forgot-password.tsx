@@ -48,7 +48,7 @@ export default function ForgotPassword() {
     if (error) {
       Alert.alert(
         'Esqueci a Senha',
-        'Erro ao solicitar a recuperação de senha, tente novamente mais tarde'
+        'Erro ao solicitar a recuperação de senha, tente novamente mais tarde',
       );
       console.error('Auth => handleForgotPassword', error);
       setIsLoading(false);
@@ -56,7 +56,7 @@ export default function ForgotPassword() {
       reset();
       Alert.alert(
         'Esqueci a Senha',
-        'Solicitação de recuperação de senha realizada com sucesso! Verifique seu e-mail'
+        'Solicitação de recuperação de senha realizada com sucesso! Verifique seu e-mail',
       );
       setIsLoading(false);
       goBack();
@@ -65,30 +65,30 @@ export default function ForgotPassword() {
 
   return (
     <VStack
-      alignItems='center'
-      justifyContent='center'
+      alignItems="center"
+      justifyContent="center"
       zIndex={100}
-      w='100%'
+      w="100%"
       px={'8%'}
-      bg='transparent'
+      bg="transparent"
       flex={1}
     >
       <Input
-        label='E-MAIL'
-        name='email'
+        label="E-MAIL"
+        name="email"
         control={control}
-        placeholder='Digite seu e-mail'
-        autoCapitalize='none'
+        placeholder="Digite seu e-mail"
+        autoCapitalize="none"
         autoCorrect={false}
-        keyboardType='email-address'
+        keyboardType="email-address"
         error={errors.email}
         placeholderTextColor={'#999'}
         _focus={{ borderColor: 'primary.700' }}
       />
 
       <Button
-        backgroundColor='primary.700'
-        title='Enviar'
+        backgroundColor="primary.700"
+        title="Enviar"
         mt={3}
         _pressed={{ bg: 'primary.600' }}
         variant={'solid'}
@@ -102,12 +102,12 @@ export default function ForgotPassword() {
       />
 
       <Button
-        title='Voltar'
+        title="Voltar"
         mt={3}
         _pressed={{ bg: 'primary.100' }}
         variant={'outline'}
-        color='primary.700'
-        borderColor='primary.700'
+        color="primary.700"
+        borderColor="primary.700"
         _text={{
           color: 'primary.700',
           fontWeight: 'bold',
@@ -116,12 +116,12 @@ export default function ForgotPassword() {
         disabled={isLoading}
       />
       <Image
-        alt='logo ehs'
+        alt="logo ehs"
         source={LogoEHS}
         defaultSource={LogoEHS}
         width={'80%'}
         height={'35%'}
-        resizeMode='contain'
+        resizeMode="contain"
         ml={5}
       />
     </VStack>

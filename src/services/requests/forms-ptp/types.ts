@@ -26,3 +26,9 @@ export interface FormPtpPost {
 export interface FormPtpPut extends FormPtpPost {
   id: string;
 }
+
+export interface FormPtpToLaudoCrm extends FormPtp {
+  lotes?: string[] | null;
+  codigoProdutos?: string[] | null;
+  detalheNaoConformidade: string[];
+}

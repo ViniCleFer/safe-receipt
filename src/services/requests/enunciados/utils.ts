@@ -11,59 +11,91 @@ export async function getEnunciadosRequest(
   page?: number,
   size?: number,
 ) {
-  const tokens = await getTokensLocalStorage();
-  const user = await getUserLocalStorage();
+  // const tokens = await getTokensLocalStorage();
+  // const user = await getUserLocalStorage();
 
-  try {
-    // const response = await axiosAuth.get(`/enunciados`, {
-    //   params: {
-    //     search,
-    //     ativo,
-    //     page,
-    //     size,
-    //   },
-    //   headers: {
-    //     Authorization: `Bearer ${tokens['access_token']}`,
-    //     userId: user?.id,
-    //   },
-    // });
+  // try {
+  // const response = await axiosAuth.get(`/enunciados`, {
+  //   params: {
+  //     search,
+  //     ativo,
+  //     page,
+  //     size,
+  //   },
+  //   headers: {
+  //     Authorization: `Bearer ${tokens['access_token']}`,
+  //     userId: user?.id,
+  //   },
+  // });
 
-    // console.log('response', JSON.stringify(response, null, 2));
+  // console.log('response', JSON.stringify(response, null, 2));
 
-    // return response;
-    const countriesWithCitiesQuery = supabase.from('enunciados').select();
-    type CountriesWithCities = QueryData<typeof countriesWithCitiesQuery>;
+  // return response;
+  const { data, error } = await supabase.from('enunciados').select();
 
-    const { data, error } = await countriesWithCitiesQuery;
-    if (error) throw error;
-    const countriesWithCities: CountriesWithCities = data;
-
-    console.log('countriesWithCities', countriesWithCities);
-
-    return countriesWithCities;
-  } catch (error) {
-    console.error('Error getEnunciadosRequest', error);
+  if (error) {
+    console.error('Error createFormPtpRequest', JSON.stringify(error, null, 2));
+    console.error('Error createFormPtpRequest', JSON.stringify(data, null, 2));
     return null;
   }
+
+  return data;
+  // } catch (error) {
+  //   console.error('Error getEnunciadosRequest', error);
+  //   return null;
+  // }
 }
 
 export async function getDetailsEnunciadoRequest(idEnunciado: string) {
-  const tokens = await getTokensLocalStorage();
-  const user = await getUserLocalStorage();
+  // const tokens = await getTokensLocalStorage();
+  // const user = await getUserLocalStorage();
 
-  try {
-    const response = await api.get(`/enunciados/${idEnunciado}`, {
-      headers: {
-        Authorization: `Bearer ${tokens['access_token']}`,
-        userId: user?.id,
-      },
-    });
+  // try {
+  //   const response = await api.get(`/enunciados/${idEnunciado}`, {
+  //     headers: {
+  //       Authorization: `Bearer ${tokens['access_token']}`,
+  //       userId: user?.id,
+  //     },
+  //   });
 
-    return response;
-  } catch (error) {
-    console.error('Error getDetailsEnunciadoRequest', error);
+  //   return response;
+  // } catch (error) {
+  //   console.error('Error getDetailsEnunciadoRequest', error);
+  //   return null;
+  // }
+
+  const { data, error, status, statusText, count } = await supabase
+    .from('enunciados')
+    .select()
+    .eq('id', idEnunciado);
+
+  if (error) {
+    console.error(
+      'Error getDetailsEnunciadoRequest',
+      JSON.stringify(error, null, 2),
+    );
+    console.error(
+      'Error getDetailsEnunciadoRequest',
+      JSON.stringify(data, null, 2),
+    );
     return null;
   }
+
+  console.log(
+    'Success getDetailsEnunciadoRequest',
+    JSON.stringify(
+      {
+        data,
+        status,
+        statusText,
+        count,
+      },
+      null,
+      2,
+    ),
+  );
+
+  return { data, status };
 }
 
 export async function createEnunciadoRequest() {

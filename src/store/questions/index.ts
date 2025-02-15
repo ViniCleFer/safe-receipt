@@ -6,7 +6,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 export interface QuestionState {
   selectedInitialQuestion: FormPtp | null;
-  setSelectedInitialQuestion: (question: FormPtp) => void;
+  setSelectedInitialQuestion: (question: FormPtp | null) => void;
   selectedQuestionOne: FormPtpAnswer | null;
   setSelectedQuestionOne: (question: FormPtpAnswer | null) => void;
   selectedQuestionTwo: FormPtpAnswer | null;
@@ -31,7 +31,7 @@ export interface QuestionState {
 
 const useQuestionStore = create(
   persist<QuestionState>(
-    (set) =>
+    set =>
       ({
         ptps: [],
         setPtps: (ptps: any) => {
@@ -52,7 +52,7 @@ const useQuestionStore = create(
           });
         },
         selectedInitialQuestion: null,
-        setSelectedInitialQuestion: (question: FormPtp) => {
+        setSelectedInitialQuestion: (question: FormPtp | null) => {
           set({
             selectedInitialQuestion: question,
           });
@@ -103,8 +103,8 @@ const useQuestionStore = create(
     {
       name: 'ptpUseQuestionStore',
       storage: createJSONStorage(() => AsyncStorage),
-    }
-  )
+    },
+  ),
 );
 
 export default useQuestionStore;

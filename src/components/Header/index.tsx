@@ -13,8 +13,8 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Platform, useWindowDimensions } from 'react-native';
 
-import LogoYpe from '../../assets/ype.png';
-import useAuthStore from '../../store/auth';
+import LogoYpe from '@/assets/ype.png';
+import useAuthStore from '@/store/auth';
 import { supabase } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
 // import useFactoryPlantStore from '../../store/factories';
@@ -28,9 +28,7 @@ export const Header = ({ ...rest }: HeaderProps) => {
 
   const { width } = useWindowDimensions();
 
-  const {
-    user_metadata: { name },
-  } = useAuthStore(state => state.user);
+  const user = useAuthStore(state => state.user);
 
   // const factoriesPlant = useFactoryPlantStore(state => state.factoriesPlant);
   // const setFactoriesPlant = useFactoryPlantStore(
@@ -45,7 +43,7 @@ export const Header = ({ ...rest }: HeaderProps) => {
 
   const [hasNavigation, setHasNavigation] = useState(false);
 
-  console.log('user', JSON.stringify(name, null, 2));
+  // console.log('user', JSON.stringify(name, null, 2));
 
   useEffect(() => {
     if (navigationState && navigationState?.index > 0) {
@@ -149,12 +147,16 @@ export const Header = ({ ...rest }: HeaderProps) => {
 
         {hasNavigation ? (
           <Text fontSize="xl" fontWeight="medium" textTransform="capitalize">
-            {name?.split(' ')?.length > 2 ? name?.split(' ')[0] : name}
+            {user?.user_metadata?.name?.split(' ')?.length > 2
+              ? user?.user_metadata?.name?.split(' ')[0]
+              : user?.user_metadata?.name}
           </Text>
         ) : (
           <VStack width="75%">
             <Text fontSize="xl" fontWeight="medium" textTransform="capitalize">
-              {name?.split(' ')?.length > 2 ? name?.split(' ')[0] : name}
+              {user?.user_metadata?.name?.split(' ')?.length > 2
+                ? user?.user_metadata?.name?.split(' ')[0]
+                : user?.user_metadata?.name}
             </Text>
           </VStack>
         )}

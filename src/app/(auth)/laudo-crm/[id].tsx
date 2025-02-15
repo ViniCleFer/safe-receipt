@@ -2,7 +2,6 @@ import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker, {
   type DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
-import { useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import {
   type CameraPictureOptions,
@@ -27,6 +26,8 @@ import {
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, StyleSheet, TouchableOpacity } from 'react-native';
 import { shade } from 'polished';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { decode } from 'base64-arraybuffer';
 
 import { Button } from '@/components/Button';
 import { Loading } from '@/components/Loading';
@@ -34,15 +35,21 @@ import { SelectWithLabel } from '@/components/SelectWithLabel';
 import { ScrollScreenContainer } from '@/components/ScrollScreenContainer';
 import { ConformidadesCheckbox } from '@/components/ConformidadesCheckbox';
 
-import { listaUPsOrigem, listaCDsOrigem } from '@/utils/listaUPs';
 import { listaTurnos } from '@/utils/listaTurnos';
-import useQuestionStore from '@/store/questions';
-import { getFormsPtpAnswerByFormPtpIdRequest } from '@/services/requests/form-ptp-answers/utils';
-import { FormPtpAnswer } from '@/services/requests/form-ptp-answers/types';
+import { generateFolderName } from '@/utils/generateFoldername';
+import { listaUPsOrigem, listaCDsOrigem } from '@/utils/listaUPs';
 import { removeDuplicatesItems } from '@/utils/removeDuplicatesItems';
+
+import useQuestionStore from '@/store/questions';
+
 import { LaudoCrmPost, Turno } from '@/services/requests/laudos/types';
 import { createLaudoCrmRequest } from '@/services/requests/laudos/utils';
-import { router } from 'expo-router';
+import { FormPtpAnswer } from '@/services/requests/form-ptp-answers/types';
+import { getFormsPtpAnswerByFormPtpIdRequest } from '@/services/requests/form-ptp-answers/utils';
+
+import { supabase } from '@/lib/supabase';
+import useAuthStore from '@/store/auth';
+import useFormPtpStore from '@/store/forms-ptp';
 
 const styles = StyleSheet.create({
   container: {
@@ -67,14 +74,15 @@ const styles = StyleSheet.create({
 
 export default function LaudoCrm() {
   const { colors } = useTheme();
-  const { navigate, back } = router;
+  const { replace, back } = router;
 
-  const selectedInitialQuestion = useQuestionStore(
-    (state) => state.selectedInitialQuestion
+  // const { id: formPtpId = '111f2687-9f88-4500-bf1b-eb2238d22750' } =
+  const { id: formPtpId } = useLocalSearchParams<{ id: string }>();
+
+  const user = useAuthStore(state => state.user);
+  const { selectedFormPtp, setSelectedFormPtp } = useFormPtpStore(
+    state => state,
   );
-
-  const laudos = useQuestionStore((state) => state.laudos);
-  const setLaudos = useQuestionStore((state) => state.setLaudos);
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -92,12 +100,12 @@ export default function LaudoCrm() {
   const [turno, setTurno] = useState('');
   const [upOrigem, setUpOrigem] = useState('');
   const [cdOrigem, setCdOrigem] = useState('');
-  // const [lotes, setLotes] = useState('');
-  // const [codigoProdutos, setCodigoProdutos] = useState('');
+  const [lotes, setLotes] = useState('');
+  const [codigoProdutos, setCodigoProdutos] = useState('');
 
   const [naoConformidadesList, setNaoConformidadesList] = useState<any[]>([]);
 
-  console.log('selectedInitialQuestion', selectedInitialQuestion);
+  console.log('selectedFormPtp', selectedFormPtp);
 
   const [permission, requestPermission] = useCameraPermissions();
 
@@ -111,53 +119,83 @@ export default function LaudoCrm() {
     console.log('Não permitiu');
   }
 
-  async function loadFormPtp() {
-    setIsLoading(true);
-    try {
-      const response = await getFormsPtpAnswerByFormPtpIdRequest(
-        // selectedInitialQuestion?.id,
-        '70b77547-7403-45ed-847e-1439c14327d6'
-      );
+  // async function loadFormPtp() {
+  //   setIsLoading(true);
+  //   try {
+  //     const response = await getFormsPtpAnswerByFormPtpIdRequest(formPtpId);
 
-      if (response?.status === 200) {
-        const formPtpAnswers = response?.data;
+  //     if (
+  //       response?.status === 200 &&
+  //       selectedFormPtp?.conferente &&
+  //       selectedFormPtp?.notaFiscal
+  //     ) {
+  //       const formPtpAnswers = response?.data[0];
 
-        console.log('formPtpAnswers', JSON.stringify(formPtpAnswers, null, 2));
+  //       setNotaFiscal(selectedFormPtp?.notaFiscal);
+  //       setConferente(selectedFormPtp?.conferente);
+  //       setLotes(selectedFormPtp?.lotes!?.map(lote => lote).join(', '));
+  //       setCodigoProdutos(
+  //         selectedFormPtp
+  //           ?.codigoProdutos!?.map(codProduto => codProduto)
+  //           ?.join(', '),
+  //       );
+  //       setNaoConformidadesList(selectedFormPtp?.detalheNaoConformidade!);
 
-        if (formPtpAnswers?.length > 0) {
-          const naoConformidades = formPtpAnswers
-            ?.map((formPtpAnswer: FormPtpAnswer) => {
-              if (formPtpAnswer?.detalheNaoConformidade?.length > 0) {
-                return formPtpAnswer?.detalheNaoConformidade?.split(',');
-              } else {
-                return null;
-              }
-            })
-            ?.filter(Boolean)
-            ?.flat();
+  //       // console.log('formPtpAnswers', JSON.stringify(formPtpAnswers, null, 2));
 
-          const naoConformidadesWithoutDuplicated =
-            naoConformidades?.length > 0
-              ? removeDuplicatesItems(naoConformidades)
-              : [];
+  //       // if (formPtpAnswers?.length > 0) {
+  //       //   const naoConformidades = formPtpAnswers
+  //       //     ?.map((formPtpAnswer: FormPtpAnswer) => {
+  //       //       if (formPtpAnswer?.detalheNaoConformidade?.length > 0) {
+  //       //         return formPtpAnswer?.detalheNaoConformidade?.split(',');
+  //       //       } else {
+  //       //         return null;
+  //       //       }
+  //       //     })
+  //       //     ?.filter(Boolean)
+  //       //     ?.flat();
 
-          setNaoConformidadesList(naoConformidadesWithoutDuplicated);
-        }
+  //       //   const naoConformidadesWithoutDuplicated =
+  //       //     naoConformidades?.length > 0
+  //       //       ? removeDuplicatesItems(naoConformidades)
+  //       //       : [];
+
+  //       //     }
+  //     }
+  //   } catch (error) {
+  //     console.log('Error loadFormPtp => ', JSON.stringify(error));
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // }
+
+  // useEffect(() => {
+  //   if (formPtpId) {
+  //     loadFormPtp();
+  //   }
+  // }, [formPtpId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      console.log('formPtpId', formPtpId);
+      if (selectedFormPtp) {
+        // loadFormPtp();
+        setNotaFiscal(selectedFormPtp?.notaFiscal!);
+        setConferente(selectedFormPtp?.conferente!);
+        setLotes(selectedFormPtp?.lotes!?.map(lote => lote).join(', '));
+        setCodigoProdutos(
+          selectedFormPtp
+            ?.codigoProdutos!?.map(codProduto => codProduto)
+            ?.join(', '),
+        );
+        setNaoConformidadesList(selectedFormPtp?.detalheNaoConformidade!);
       }
-    } catch (error) {
-      console.log('Error loadFormPtp => ', JSON.stringify(error));
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    loadFormPtp();
-  }, []);
+    }, [formPtpId, selectedFormPtp]),
+  );
 
   const onChange = (
     event: DateTimePickerEvent,
-    selectedDate?: Date | undefined
+    selectedDate?: Date | undefined,
   ) => {
     setDataIdentificacao(selectedDate!);
     setIsDatePickerVisible(false);
@@ -174,16 +212,20 @@ export default function LaudoCrm() {
     setTurno('');
     setUpOrigem('');
     setImagesList([]);
+    setLotes('');
+    setCodigoProdutos('');
+    setNaoConformidadesList([]);
+    setSelectedFormPtp(null);
 
-    back();
-  }, [back]);
+    replace('/(auth)/dashboard');
+  }, [replace, setSelectedFormPtp]);
 
   const pickImageInLibrary = async () => {
     setLoadingPreview(true);
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.All,
-        allowsEditing: true,
+        allowsEditing: false,
         base64: true,
         quality: 1,
       });
@@ -196,9 +238,9 @@ export default function LaudoCrm() {
 
         const mimetype = mime.getType(uri);
 
-        console.log('result', JSON.stringify(result, null, 2));
+        // console.log('result', JSON.stringify(result, null, 2));
 
-        setImagesList((prevState) => [
+        setImagesList(prevState => [
           ...prevState,
           { uri, base64, mimetype, filename, size },
         ]);
@@ -225,9 +267,9 @@ export default function LaudoCrm() {
 
         const size = photo?.uri?.length;
 
-        console.log('photo', JSON.stringify(photo, null, 2));
+        // console.log('photo', JSON.stringify(photo, null, 2));
 
-        setImagesList((prevState) => [
+        setImagesList(prevState => [
           ...prevState,
           {
             uri: photo?.uri,
@@ -267,6 +309,28 @@ export default function LaudoCrm() {
   }, [permission, requestPermission, imagesList]);
 
   const handleSaveLaudoCrm = useCallback(async () => {
+    console.log('imagesList', JSON.stringify(imagesList.length, null, 2));
+    console.log(
+      'naoConformidadesList',
+      JSON.stringify(naoConformidadesList, null, 2),
+    );
+    console.log('formPtpId', JSON.stringify(formPtpId, null, 2));
+    console.log(
+      'documentoTransporte',
+      JSON.stringify(documentoTransporte, null, 2),
+    );
+    console.log('transportador', JSON.stringify(transportador, null, 2));
+    console.log('placa', JSON.stringify(placa, null, 2));
+    console.log('notaFiscal', JSON.stringify(notaFiscal, null, 2));
+    console.log(
+      'dataIdentificacao',
+      JSON.stringify(dataIdentificacao, null, 2),
+    );
+    console.log('conferente', JSON.stringify(conferente, null, 2));
+    console.log('turno', JSON.stringify(turno, null, 2));
+    console.log('upOrigem', JSON.stringify(upOrigem, null, 2));
+    console.log('cdOrigem', JSON.stringify(cdOrigem, null, 2));
+
     if (
       !documentoTransporte ||
       !transportador ||
@@ -282,32 +346,19 @@ export default function LaudoCrm() {
       setIsLoading(false);
       return Alert.alert(
         'Laudo CRM',
-        'Por favor, preencha todos os campos para cadastrar o Laudo CRM.'
+        'Por favor, preencha todos os campos para cadastrar o Laudo CRM.',
       );
     }
 
-    if (!selectedInitialQuestion) {
+    if (!formPtpId) {
       Alert.alert('Cadastro', 'ID do Formulário PTP não foi encontrado.');
       return;
     }
 
     setIsLoading(true);
 
-    const arquivos =
-      imagesList?.length > 0
-        ? imagesList?.map((i, idx) => {
-            const extension = mime.getExtension(i?.mimetype);
-
-            return {
-              base64: i?.base64,
-              mimetype: i?.mimetype,
-              filename: i?.filename
-                ? i?.filename
-                : 'arquivo ' + idx + '.' + extension,
-              size: i?.size,
-            };
-          })
-        : [];
+    console.log('lotes?.split(', ')', lotes?.split(','));
+    console.log('codigoProdutos?.split(', ')', codigoProdutos?.split(','));
 
     const data: LaudoCrmPost = {
       documentoTransporte,
@@ -319,52 +370,152 @@ export default function LaudoCrm() {
       turno: turno as Turno,
       upOrigem: upOrigem,
       cdOrigem: cdOrigem,
-      evidencias: arquivos,
-      form_ptp_id: '70b77547-7403-45ed-847e-1439c14327d6', // selectedInitialQuestion?.id,
-      tipsoNaoConformidade: naoConformidadesList,
+      evidencias: [],
+      form_ptp_id: formPtpId,
+      tiposNaoConformidade: naoConformidadesList,
+      lotes: lotes?.split(','),
+      codigoProdutos: codigoProdutos?.split(','),
+      user_id: user?.id!,
     };
 
-    const opa = { ...data, evidencias: [] };
+    // console.log('data', JSON.stringify(opa, null, 2));
 
-    console.log('data', JSON.stringify(opa, null, 2));
+    const response = await createLaudoCrmRequest(data);
+    // console.log('response', JSON.stringify(response, null, 2));
 
-    try {
-      const response = await createLaudoCrmRequest(data);
-      console.log('response', JSON.stringify(response, null, 2));
+    if (response?.status === 201 && response?.data?.length > 0) {
+      // console.log('response', JSON.stringify(response, null, 2));
 
-      if (response?.status === 201) {
-        const laudo = {
-          ...response?.data,
-          type: 'laudo',
-        };
+      // setLaudos({
+      //   ...response?.data[0],
+      //   // proximoEnunciadoId: primeiroId,
+      //   // proximoEnunciadoGrupo: GrupoEnunciado.PALETE,
+      // });
+      // const laudo = {
+      //   ...response?.data[0],
+      //   type: 'laudo',
+      // };
 
-        setLaudos([...laudos, laudo]);
+      // setLaudos([...laudos, laudo]);
 
-        console.log('response', JSON.stringify(response?.data, null, 2));
+      const evidencias =
+        imagesList?.length > 0
+          ? imagesList?.map(i => {
+              const extension = mime.getExtension(i?.mimetype);
 
-        Alert.alert('Sucesso!', 'O Laudo CRM foi salvo com sucesso.');
+              return {
+                base64: i?.base64,
+                mimetype: i?.mimetype,
+                filename: i?.filename
+                  ? i?.filename
+                  : 'arquivo ' + new Date().toString() + '.' + extension,
+              };
+            })
+          : [];
 
-        navigate('/(home)/dashboard');
-      } else {
-        Alert.alert(
-          'Erro!',
-          'Ocorreu um erro ao salvar o Laudo CRM, tente novamente mais tarde.'
+      if (evidencias?.length > 0) {
+        const folderName = generateFolderName(
+          true,
+          response?.data[0]?.id,
+          null,
         );
+
+        let evidenciasIds: string[] = [];
+
+        for await (const evidencia of evidencias) {
+          console.log('folderName', folderName);
+
+          const { data, error } = await supabase.storage
+            .from(folderName)
+            .upload(evidencia?.filename, decode(evidencia?.base64), {
+              contentType: evidencia?.mimetype,
+              upsert: false,
+            });
+
+          delete evidencia.base64;
+
+          console.log('evidencia', JSON.stringify(evidencia, null, 2));
+
+          console.log('evidencia data', JSON.stringify(data, null, 2));
+          console.log('evidencia error', JSON.stringify(error, null, 2));
+
+          if (error !== null) {
+            setIsLoading(false);
+            Alert.alert(
+              'Ops!',
+              'Ocorreu um erro ao salvar as Evidências do Laudo CRM, tente novamente mais tarde.',
+            );
+          }
+
+          console.log('evidencia2 data', JSON.stringify(data, null, 2));
+          console.log('evidencia2 error', JSON.stringify(error, null, 2));
+
+          evidenciasIds = [...evidenciasIds, data?.path!];
+        }
+
+        if (evidenciasIds?.length > 0) {
+          const isUnique = evidenciasIds.filter(
+            (value, index, self) => self.indexOf(value) === index,
+          );
+
+          const responseUpdate = await supabase
+            .from('laudos-crm')
+            .update({
+              evidencias: [...isUnique],
+            })
+            .eq('id', response?.data[0]?.id)
+            .select();
+          console.log(
+            'responseUpdate',
+            JSON.stringify(responseUpdate, null, 2),
+          );
+
+          setIsLoading(false);
+
+          if (responseUpdate?.error !== null) {
+            return Alert.alert(
+              'Ops!',
+              'Ocorreu um erro ao vincular as Evidências ao Laudo CRM, tente novamente mais tarde.',
+            );
+          }
+
+          if (responseUpdate?.status === 200) {
+            return Alert.alert(
+              'Sucesso!',
+              'Laudo CRM cadastrado com sucesso!',
+              [
+                {
+                  text: 'Fechar',
+                  onPress: () => {
+                    handleBack();
+                  },
+                },
+              ],
+            );
+          }
+        }
       }
-    } catch (error) {
-      console.log('Error handleSaveLaudoCrm', JSON.stringify(error, null, 2));
-      Alert.alert(
-        'Erro!',
-        'Ocorreu um erro ao salvar o Laudo CRM, tente novamente mais tarde.'
-      );
-    } finally {
+
       setIsLoading(false);
+      return Alert.alert('Sucesso!', 'Laudo CRM cadastrado com sucesso!', [
+        {
+          text: 'Fechar',
+          onPress: () => {
+            handleBack();
+          },
+        },
+      ]);
+    } else {
+      Alert.alert(
+        'Salvar Laudo',
+        'Ocorreu um erro ao salvar o Laudo CRM, tente novamente mais tarde.',
+      );
     }
+
+    setIsLoading(false);
   }, [
-    navigate,
+    replace,
     imagesList,
-    laudos,
-    setLaudos,
     documentoTransporte,
     transportador,
     placa,
@@ -375,8 +526,11 @@ export default function LaudoCrm() {
     turno,
     upOrigem,
     cdOrigem,
-    selectedInitialQuestion,
+    selectedFormPtp,
     naoConformidadesList,
+    formPtpId,
+    user,
+    setSelectedFormPtp,
   ]);
 
   const handleCancel = useCallback(() => {
@@ -393,7 +547,7 @@ export default function LaudoCrm() {
             handleBack();
           },
         },
-      ]
+      ],
     );
   }, [handleBack]);
 
@@ -410,7 +564,7 @@ export default function LaudoCrm() {
       {loadingPreview && (
         <Loading
           flex={1}
-          height='100%'
+          height="100%"
           position={'absolute'}
           top={0}
           left={0}
@@ -423,12 +577,12 @@ export default function LaudoCrm() {
       <CameraView
         ref={cameraRef}
         style={{ flex: 1, flexDirection: 'row' }}
-        facing='back'
+        facing="back"
       >
-        <Box style={styles.takePictureContainer} backgroundColor='transparent'>
+        <Box style={styles.takePictureContainer} backgroundColor="transparent">
           <TouchableOpacity onPress={takePicture}>
             <Box
-              borderRadius='full'
+              borderRadius="full"
               style={{
                 backgroundColor: '#fff',
                 height: 60,
@@ -442,7 +596,7 @@ export default function LaudoCrm() {
               setIsCameraActive(false);
             }}
           >
-            <MaterialIcons name='cancel' size={40} color='white' />
+            <MaterialIcons name="cancel" size={40} color="white" />
           </TouchableOpacity>
         </Box>
       </CameraView>
@@ -452,7 +606,7 @@ export default function LaudoCrm() {
       {isLoading && (
         <Loading
           flex={1}
-          height='100%'
+          height="100%"
           position={'absolute'}
           top={0}
           left={0}
@@ -462,85 +616,85 @@ export default function LaudoCrm() {
           backgroundColor={'rgba(000, 000, 000, 0.6)'}
         />
       )}
-      <ScrollScreenContainer subtitle='LAUDO CRM'>
-        <VStack px={2} space={6} mb='20%' pt={2}>
+      <ScrollScreenContainer subtitle="LAUDO CRM">
+        <VStack px={2} space={6} mb="20%" pt={2}>
           <Box mb={1}>
-            <Text mb={-2} color='gray.750'>
+            <Text mb={-2} color="gray.750">
               Documento de Transporte:
             </Text>
             <Input
-              w='full'
-              variant='underlined'
+              w="full"
+              variant="underlined"
               height={14}
-              size='md'
-              fontSize='md'
+              size="md"
+              fontSize="md"
               pb={0}
-              placeholderTextColor='gray.700'
+              placeholderTextColor="gray.700"
               value={documentoTransporte}
-              onChangeText={(t) => {
+              onChangeText={t => {
                 setDocumentoTransporte(t);
               }}
               _focus={{ borderColor: 'primary.700' }}
-              autoComplete='off'
+              autoComplete="off"
             />
           </Box>
 
           <Box mb={1}>
-            <Text mb={-2} color='gray.750'>
+            <Text mb={-2} color="gray.750">
               Transportador:
             </Text>
             <Input
-              w='full'
-              variant='underlined'
+              w="full"
+              variant="underlined"
               height={14}
-              size='md'
-              fontSize='md'
+              size="md"
+              fontSize="md"
               pb={0}
-              placeholderTextColor='gray.700'
+              placeholderTextColor="gray.700"
               value={transportador}
-              onChangeText={(t) => {
+              onChangeText={t => {
                 setTransportador(t);
               }}
               _focus={{ borderColor: 'primary.700' }}
-              autoComplete='off'
+              autoComplete="off"
             />
           </Box>
 
           <Box mb={1}>
-            <Text mb={-2} color='gray.750'>
+            <Text mb={-2} color="gray.750">
               Placa:
             </Text>
             <Input
-              w='full'
-              variant='underlined'
+              w="full"
+              variant="underlined"
               height={14}
-              size='md'
-              fontSize='md'
+              size="md"
+              fontSize="md"
               pb={0}
-              placeholderTextColor='gray.700'
+              placeholderTextColor="gray.700"
               value={placa}
-              onChangeText={(t) => {
+              onChangeText={t => {
                 setPlaca(t);
               }}
               _focus={{ borderColor: 'primary.700' }}
-              placeholder='000-0000'
-              autoComplete='off'
+              placeholder="000-0000"
+              autoComplete="off"
             />
           </Box>
 
           <Box mb={1}>
-            <Text mb={-2} color='gray.750'>
+            <Text mb={-2} color="gray.750">
               Nota Fiscal:
             </Text>
             <Input
-              w='full'
-              variant='underlined'
+              w="full"
+              variant="underlined"
               height={14}
-              size='md'
-              fontSize='md'
+              size="md"
+              fontSize="md"
               pb={0}
-              placeholderTextColor='gray.700'
-              value={selectedInitialQuestion?.notaFiscal}
+              placeholderTextColor="gray.700"
+              value={notaFiscal}
               // onChangeText={setNotaFiscal}
               isDisabled
               _disabled={{
@@ -549,7 +703,57 @@ export default function LaudoCrm() {
                 borderColor: 'gray.700',
               }}
               _focus={{ borderColor: 'primary.700' }}
-              autoComplete='off'
+              autoComplete="off"
+            />
+          </Box>
+
+          <Box mb={1}>
+            <Text mb={-2} color="gray.750">
+              Lotes:
+            </Text>
+            <Input
+              w="full"
+              variant="underlined"
+              height={14}
+              size="md"
+              fontSize="md"
+              pb={0}
+              placeholderTextColor="gray.700"
+              value={lotes}
+              isDisabled
+              _disabled={{
+                color: 'gray.900',
+                opacity: 1,
+                borderColor: 'gray.700',
+              }}
+              _focus={{ borderColor: 'primary.700' }}
+              autoComplete="off"
+              multiline
+            />
+          </Box>
+
+          <Box mb={1}>
+            <Text mb={-2} color="gray.750">
+              Códigos dos Produtos:
+            </Text>
+            <Input
+              w="full"
+              variant="underlined"
+              height={14}
+              size="md"
+              fontSize="md"
+              pb={0}
+              placeholderTextColor="gray.700"
+              value={codigoProdutos}
+              isDisabled
+              _disabled={{
+                color: 'gray.900',
+                opacity: 1,
+                borderColor: 'gray.700',
+              }}
+              _focus={{ borderColor: 'primary.700' }}
+              autoComplete="off"
+              multiline
             />
           </Box>
 
@@ -557,24 +761,24 @@ export default function LaudoCrm() {
             // onPress={() => {
             //   setIsDatePickerVisible(prevState => !prevState);
             // }}
-            backgroundColor='primary.700'
+            backgroundColor="primary.700"
             px={2}
             py={1}
             borderRadius={4}
             shadow={2}
             disabled
           >
-            <HStack alignItems='center' justifyContent='space-between'>
+            <HStack alignItems="center" justifyContent="space-between">
               <VStack>
-                <Text color='white' fontWeight='semibold'>
+                <Text color="white" fontWeight="semibold">
                   Data da identificação
                 </Text>
-                <Text color='white' fontWeight='bold'>
+                <Text color="white" fontWeight="bold">
                   {dayjs(dataIdentificacao).format('DD/MM/YYYY')}
                 </Text>
               </VStack>
               <MaterialCommunityIcons
-                name='calendar'
+                name="calendar"
                 color={colors.white}
                 size={28}
               />
@@ -582,32 +786,32 @@ export default function LaudoCrm() {
           </Pressable>
 
           {isDatePickerVisible && (
-            <Box alignSelf='center' pl={0}>
+            <Box alignSelf="center" pl={0}>
               <DateTimePicker
-                mode='date'
+                mode="date"
                 value={dataIdentificacao}
-                locale='pt-BR'
+                locale="pt-BR"
                 onChange={onChange}
                 is24Hour={true}
-                display='spinner'
+                display="spinner"
                 maximumDate={new Date()}
               />
             </Box>
           )}
 
           <Box mb={1}>
-            <Text mb={-2} color='gray.750'>
+            <Text mb={-2} color="gray.750">
               Conferente:
             </Text>
             <Input
-              w='full'
-              variant='underlined'
+              w="full"
+              variant="underlined"
               height={14}
-              size='md'
-              fontSize='md'
+              size="md"
+              fontSize="md"
               pb={0}
-              placeholderTextColor='gray.700'
-              value={selectedInitialQuestion?.conferente}
+              placeholderTextColor="gray.700"
+              value={conferente}
               // onChangeText={setConferente}
               isDisabled
               _disabled={{
@@ -616,15 +820,15 @@ export default function LaudoCrm() {
                 borderColor: 'gray.700',
               }}
               _focus={{ borderColor: 'primary.700' }}
-              autoComplete='off'
+              autoComplete="off"
             />
           </Box>
 
           <SelectWithLabel
-            label='Turno'
+            label="Turno"
             selectedValue={turno}
             onValueChange={setTurno}
-            options={listaTurnos?.map((s) => (
+            options={listaTurnos?.map(s => (
               <Select.Item key={s?.value} label={s?.label} value={s?.value} />
             ))}
           />
@@ -655,25 +859,25 @@ export default function LaudoCrm() {
           </Box> */}
 
           <SelectWithLabel
-            label='UP Origem'
+            label="UP Origem"
             selectedValue={upOrigem}
             onValueChange={setUpOrigem}
-            options={listaUPsOrigem?.map((s) => (
+            options={listaUPsOrigem?.map(s => (
               <Select.Item key={s?.value} label={s?.label} value={s?.value} />
             ))}
           />
 
           <SelectWithLabel
-            label='CD Origem'
+            label="CD Origem"
             selectedValue={cdOrigem}
             onValueChange={setCdOrigem}
-            options={listaCDsOrigem?.map((s) => (
+            options={listaCDsOrigem?.map(s => (
               <Select.Item key={s?.value} label={s?.label} value={s?.value} />
             ))}
           />
 
           <VStack>
-            <Text color='gray.750' mb={4}>
+            <Text color="gray.750" mb={4}>
               Evidência(s)
             </Text>
 
@@ -684,18 +888,18 @@ export default function LaudoCrm() {
                     key={index}
                     space={2}
                     mb={4}
-                    w='full'
-                    justifyContent='space-between'
-                    alignItems='center'
+                    w="full"
+                    justifyContent="space-between"
+                    alignItems="center"
                   >
-                    <HStack space={2} alignItems='center'>
+                    <HStack space={2} alignItems="center">
                       <Image
                         key={index}
                         source={{ uri: image.uri }}
-                        alt='image'
-                        size='sm'
-                        width='80px'
-                        height='30px'
+                        alt="image"
+                        size="sm"
+                        width="80px"
+                        height="30px"
                       />
 
                       <Text>{index}</Text>
@@ -703,14 +907,14 @@ export default function LaudoCrm() {
                     <Pressable
                       onPress={() => {
                         const newImagesList = imagesList?.filter(
-                          (_, idx) => idx !== index
+                          (_, idx) => idx !== index,
                         );
 
                         setImagesList(newImagesList);
                       }}
                     >
                       <MaterialIcons
-                        name='delete'
+                        name="delete"
                         color={colors.secondary[700]}
                         size={24}
                       />
@@ -721,14 +925,14 @@ export default function LaudoCrm() {
             )}
 
             <HStack
-              alignItems='center'
-              justifyContent='flex-start'
-              mb='24px'
+              alignItems="center"
+              justifyContent="flex-start"
+              mb="24px"
               space={5}
             >
               <Pressable onPress={handlePhotoLibrary}>
                 <MaterialIcons
-                  name='photo'
+                  name="photo"
                   color={colors.gray[800]}
                   size={28}
                 />
@@ -739,7 +943,7 @@ export default function LaudoCrm() {
                 }}
               >
                 <MaterialCommunityIcons
-                  name='camera'
+                  name="camera"
                   color={colors.gray[800]}
                   size={28}
                 />
@@ -747,21 +951,21 @@ export default function LaudoCrm() {
             </HStack>
           </VStack>
 
-          <Box mb={1} width='100%'>
+          <Box mb={1} width="100%">
             <ConformidadesCheckbox
               listaNaoConformidades={naoConformidadesList}
               setListaNaoConformidades={setNaoConformidadesList}
-              label='Anomalias encontradas:'
+              label="Anomalias encontradas:"
               isOnlyView
             />
           </Box>
 
-          <HStack width='100%' justifyContent='space-between' mt={4}>
+          <HStack width="100%" justifyContent="space-between" mt={4}>
             <Button
-              width='48%'
-              h='50px'
-              backgroundColor='gray.700'
-              title='Cancelar'
+              width="48%"
+              h="50px"
+              backgroundColor="gray.700"
+              title="Cancelar"
               _pressed={{ bg: 'gray.600' }}
               variant={'solid'}
               _text={{
@@ -771,14 +975,14 @@ export default function LaudoCrm() {
                 handleCancel();
               }}
               disabled={isLoading}
-              leftIcon={<Icon as={MaterialIcons} name='delete' size='md' />}
+              leftIcon={<Icon as={MaterialIcons} name="delete" size="md" />}
             />
 
             <Button
-              width='48%'
-              h='50px'
-              backgroundColor='primary.700'
-              title='Salvar'
+              width="48%"
+              h="50px"
+              backgroundColor="primary.700"
+              title="Salvar"
               _pressed={{ bg: shade(0.3, '#2e2efe') }}
               variant={'solid'}
               _text={{
@@ -787,7 +991,7 @@ export default function LaudoCrm() {
               onPress={handleSaveLaudoCrm}
               isLoading={isLoading}
               disabled={isLoading}
-              leftIcon={<Icon as={MaterialIcons} name='save' size='md' />}
+              leftIcon={<Icon as={MaterialIcons} name="save" size="md" />}
             />
           </HStack>
         </VStack>

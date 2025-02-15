@@ -2,13 +2,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-import { type FormPtp } from '../../services/requests/forms-ptp/types';
+import {
+  FormPtpToLaudoCrm,
+  type FormPtp,
+} from '@/services/requests/forms-ptp/types';
 
 export interface FormPtpState {
   formsPtp: Array<Partial<FormPtp>>;
-  selectedFormPtp: Partial<FormPtp> | null;
   setFormsPtp: (formsPtp: FormPtp[]) => void;
-  setSelectedFormPtp: (formPtp: FormPtp) => void;
+  selectedFormPtp: Partial<FormPtpToLaudoCrm> | null;
+  setSelectedFormPtp: (formPtp: FormPtpToLaudoCrm | null) => void;
 }
 
 const useFormPtpStore = create(
@@ -16,18 +19,18 @@ const useFormPtpStore = create(
     set =>
       ({
         formsPtp: [],
-        selectedFormPtp: null,
         setFormsPtp: (formsPtp: FormPtp[]) => {
           set({
             formsPtp,
           });
         },
-        setSelectedFormPtp: (formPtp: FormPtp) => {
+        selectedFormPtp: null,
+        setSelectedFormPtp: (formPtp: FormPtpToLaudoCrm | null) => {
           set({
             selectedFormPtp: formPtp,
           });
         },
-      }) as FormPtpState,
+      } as FormPtpState),
     {
       name: 'ptpUseFormPtpStore',
       storage: createJSONStorage(() => AsyncStorage),

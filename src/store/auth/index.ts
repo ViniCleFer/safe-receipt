@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-import { type Tokens } from '../../services/requests/auth/types';
+import { type Tokens } from '@/services/requests/auth/types';
 import { User } from '@supabase/supabase-js';
 // import { type User } from '../../services/requests/users/types';
 
