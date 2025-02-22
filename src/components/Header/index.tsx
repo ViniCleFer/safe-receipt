@@ -95,24 +95,25 @@ export const Header = ({ ...rest }: HeaderProps) => {
     }
   }, [supabase]);
 
-  const update = useCallback(async () => {
-    const data = {
-      name: 'Vinicius Fernandes',
-    };
+  // const update = useCallback(async () => {
+  //   const data = {
+  //     name: 'Vinicius Fernandes',
+  //   };
 
-    const { data: responseData, error } = await supabase.auth.updateUser({
-      data,
-    });
+  //   const { data: responseData, error } = await supabase.auth.updateUser({
+  //     data,
+  //   });
 
-    console.log('responseData', JSON.stringify(responseData, null, 2));
+  //   console.log('responseData', JSON.stringify(responseData, null, 2));
 
-    // if (error) {
-    //   Alert.alert('Erro ao sair', 'Por favor, tente novamente mais tarde');
+  //   // if (error) {
+  //   //   Alert.alert('Erro ao sair', 'Por favor, tente novamente mais tarde');
 
-    //   console.error('Error logging out:', error.message);
-    //   return;
-    // }
-  }, [supabase]);
+  //   //   console.error('Error logging out:', error.message);
+  //   //   return;
+  //   // }
+  // }, [supabase]);
+
   return (
     <HStack
       bg={colors.white}
@@ -123,7 +124,7 @@ export const Header = ({ ...rest }: HeaderProps) => {
       maxW={width}
       justifyContent={hasNavigation ? 'space-between' : 'flex-start'}
       alignItems="center"
-      pt={Platform.OS === 'android' ? '24px' : '40px'}
+      pt={Platform.OS === 'android' ? '24px' : '50px'}
       shadow="8"
       {...rest}
     >

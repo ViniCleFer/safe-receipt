@@ -1,15 +1,7 @@
-import {
-  Select as NativeBaseSelect,
-  Text,
-  Box,
-  useTheme,
-  Input,
-  IInputProps,
-} from 'native-base';
 import React from 'react';
+import { Text, Box, useTheme, Input, IInputProps } from 'native-base';
 import { Control, Controller } from 'react-hook-form';
 
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { ColorType } from 'native-base/lib/typescript/components/types';
 
 type InputProps = IInputProps & {

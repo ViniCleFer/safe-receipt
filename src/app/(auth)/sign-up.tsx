@@ -20,11 +20,12 @@ import { supabase } from '@/lib/supabase';
 import { setUserLocalStorage } from '@/services/requests/auth/helpers';
 
 interface FormData {
+  name: string;
   email: string;
   password: string;
 }
 
-export default function SignIn() {
+export default function SignUp() {
   const currentVersion = Constants?.default?.expoConfig?.version;
 
   const setUserAuthenticated = useAuthStore(
@@ -36,7 +37,10 @@ export default function SignIn() {
 
   const formValidation = useCallback((): any => {
     return z.object({
-      email: z.string({ required_error: 'O campo RE/E-mail é obrigatório.' }),
+      name: z.string({ required_error: 'O campo Nome é obrigatório.' }),
+      email: z
+        .string({ required_error: 'O campo E-mail é obrigatório.' })
+        .email('O campo E-mail é obrigatório.'),
       password: z.string({ required_error: 'O campo senha é obrigatório' }),
     });
   }, []);
@@ -54,22 +58,26 @@ export default function SignIn() {
   async function handleLogin(formData: any) {
     setIsLoading(true);
 
+    console.log('SignUp => formData', formData?.email);
+
     const {
       error,
       data: { session },
-    } = await supabase.auth.signInWithPassword({
-      email: formData.email,
-      password: formData.password,
+    } = await supabase.auth.signUp({
+      email: formData?.email,
+      password: formData?.password,
+      options: {
+        data: {
+          name: formData?.name,
+        },
+      },
     });
 
     if (error) {
+      console.error('SignUp => handleSignUp', JSON.stringify(error, null, 2));
       Alert.alert(
         'Login',
         'Erro ao logar um usuário, por favor tente novamente mais tarde',
-      );
-      console.error(
-        'SignUp => handleSignUp',
-        JSON.stringify(error?.message, null, 2),
       );
     }
 
@@ -81,9 +89,8 @@ export default function SignIn() {
         refresh_token,
       };
 
-      await setUserLocalStorage(user);
       setUserAuthenticated(user, tokens);
-      router.replace('/(auth)/dashboard');
+      router.replace('/(tabs)/(list)');
     }
     setIsLoading(false);
 
@@ -114,10 +121,20 @@ export default function SignIn() {
       />
 
       <Input
+        label="NAME"
+        name="name"
+        control={control}
+        placeholder="Digite o nome"
+        autoCapitalize="none"
+        autoCorrect={false}
+        error={errors.name}
+        _focus={{ borderColor: 'primary.700' }}
+      />
+      <Input
         label="LOGIN"
         name="email"
         control={control}
-        placeholder="E-mail ou RE"
+        placeholder="Digite o e-mail"
         autoCapitalize="none"
         autoCorrect={false}
         keyboardType="email-address"
@@ -129,7 +146,7 @@ export default function SignIn() {
         name="password"
         control={control}
         error={errors.password}
-        placeholder="Senha"
+        placeholder="Digite a senha"
         secureTextEntry={closedEyes}
         autoComplete="off"
         _focus={{ borderColor: 'primary.700' }}
@@ -156,7 +173,7 @@ export default function SignIn() {
 
       <Button
         backgroundColor="primary.700"
-        title="Entrar"
+        title="Cadastrar"
         my={2}
         _pressed={{ bg: 'primary.600' }}
         variant={'solid'}
@@ -169,31 +186,38 @@ export default function SignIn() {
         leftIcon={<Icon as={MaterialIcons} name="login" size="md" />}
       />
 
-      <Link
-        onPress={() => {
-          router.navigate('/sign-up');
+      {/* <Button
+        backgroundColor="primary.700"
+        title="Logout"
+        my={2}
+        _pressed={{ bg: 'primary.600' }}
+        variant={'solid'}
+        _text={{
+          color: 'white',
         }}
-        alignSelf="center"
-        padding={2}
-      >
-        Cadastre-se
-      </Link>
+        onPress={async () => {
+          const { error } = await supabase.auth.signOut();
 
-      <Link
-        onPress={() => {
-          router.navigate('/forgot-password');
+          if (error) {
+            Alert.alert(
+              'Erro ao sair',
+              'Por favor, tente novamente mais tarde',
+            );
+
+            console.error('Error logging out:', error.message);
+            return;
+          }
         }}
-        alignSelf="center"
-        padding={2}
-      >
-        Esqueceu a senha?
-      </Link>
+        isLoading={isLoading}
+        disabled={isLoading}
+        leftIcon={<Icon as={MaterialIcons} name="login" size="md" />}
+      /> */}
 
       <Box
         justifyContent="center"
         alignItems="center"
         position="fixed"
-        bottom={'-8%'}
+        bottom={'-6%'}
       >
         <Text color="gray.750" fontSize="12px" fontWeight="semibold">
           @Copyright VF Code LTDA {actualYear}

@@ -1,31 +1,26 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import { HStack, Pressable, Text, useTheme } from 'native-base';
 import { useCallback } from 'react';
+import { MaterialIcons } from '@expo/vector-icons';
+import { HStack, Pressable, Text, useTheme } from 'native-base';
 
-import { Card } from '../../components/Card';
-import { ScrollScreenContainer } from '../../components/ScrollScreenContainer';
+import { Card } from '@/components/Card';
+import { ScrollScreenContainer } from '@/components/ScrollScreenContainer';
 import { router } from 'expo-router';
 
 export default function SelectFormType() {
   const { colors } = useTheme();
   const { navigate } = router;
 
-  const handleListFormPtp = useCallback(() => {
-    navigate('/(auth)/forms-ptp-list');
+  const handleCreateFormPtp = useCallback(() => {
+    navigate('/form-ptp');
   }, [navigate]);
 
-  const handleListLaudoCrm = useCallback(() => {
-    navigate('/(auth)/laudos-crm-list');
-  }, [navigate]);
-
-  const handleListDivergencia = useCallback(() => {
-    navigate('/(auth)/divergencies-list');
+  const handleCreateDivergencia = useCallback(() => {
+    navigate('/select-divergency-type');
   }, [navigate]);
 
   return (
-    <ScrollScreenContainer subtitle="Selecione o evento para listagem">
-      <Pressable onPress={handleListFormPtp}>
+    <ScrollScreenContainer subtitle="Selecione o tipo de formulário para cadastro">
+      <Pressable onPress={handleCreateFormPtp}>
         <Card
           bg="white"
           mt="8px"
@@ -36,7 +31,7 @@ export default function SelectFormType() {
         >
           <HStack bg="white" alignItems="center" space={3}>
             <MaterialIcons
-              name="warning"
+              name="add-business"
               size={30}
               color={colors.primary[700]}
             />
@@ -46,7 +41,7 @@ export default function SelectFormType() {
           </HStack>
         </Card>
       </Pressable>
-      <Pressable onPress={handleListLaudoCrm}>
+      {/* <Pressable onPress={handleCreateLaudoCrm}>
         <Card
           bg="white"
           mt="8px"
@@ -66,8 +61,8 @@ export default function SelectFormType() {
             </Text>
           </HStack>
         </Card>
-      </Pressable>
-      <Pressable onPress={handleListDivergencia}>
+      </Pressable> */}
+      <Pressable onPress={handleCreateDivergencia}>
         <Card
           bg="white"
           mt="8px"
@@ -78,7 +73,7 @@ export default function SelectFormType() {
         >
           <HStack bg="white" alignItems="center" space={3}>
             <MaterialIcons
-              name="warning"
+              name="add-chart"
               size={30}
               color={colors.primary[700]}
             />

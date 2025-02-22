@@ -23,15 +23,28 @@ export const ScrollScreenContainer = ({
   // const navigation = useNavigation();
 
   return (
-    <VStack flex={1} maxW={width} bg='white' {...rest}>
+    <VStack flex={1} maxW={width} bg="white" {...rest}>
       <Header zIndex={subtitle ? 0 : 999} />
-      {subtitle && (
-        <Box bg='primary.700' p={1} shadow='5' zIndex={999}>
-          <Text color='white' fontWeight='bold' fontSize='sm'>
+      {/* {subtitle && (
+        <Box
+          bg="primary.700"
+          p={1}
+          shadow="5"
+          zIndex={999}
+          height={'50px'}
+          justifyContent="center"
+          alignItems="center"
+        >
+          <Text
+            color="white"
+            fontWeight="bold"
+            fontSize="lg"
+            textAlign="center"
+          >
             {subtitle}
           </Text>
         </Box>
-      )}
+      )} */}
       <ScrollView
         flex={1}
         _contentContainerStyle={{

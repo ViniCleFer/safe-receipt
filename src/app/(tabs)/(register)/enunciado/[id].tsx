@@ -232,7 +232,7 @@ export default function Enunciado() {
           const routeParams = `${proximoEnunciadoId}--${enunciadoFounded?.grupo}`;
 
           handleClear();
-          push(`/(auth)/enunciado/${routeParams}`);
+          push(`/enunciado/${routeParams}`);
         } else {
           const haNaoConformidadeQuestionOne = answers[0]?.naoConformidade;
           const haNaoConformidadeQuestionTwo = answers[1]?.naoConformidade;
@@ -284,9 +284,9 @@ export default function Enunciado() {
           console.log('abrirLaudo', abrirLaudo);
 
           if (abrirLaudo) {
-            push('/(auth)/laudo-crm/selectedInitialQuestion?.id!');
+            push('/laudo-crm/selectedInitialQuestion?.id!');
           } else {
-            replace('/(auth)/dashboard');
+            replace('/(tabs)/(list)');
             setAnswers([]);
           }
         }

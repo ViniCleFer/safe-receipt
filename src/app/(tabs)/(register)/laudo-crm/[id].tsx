@@ -221,7 +221,7 @@ export default function LaudoCrm() {
     setNaoConformidadesList([]);
     setSelectedFormPtp(null);
 
-    replace('/(auth)/dashboard');
+    replace('/(tabs)/(list)');
   }, [replace, setSelectedFormPtp]);
 
   const pickImageInLibrary = async () => {

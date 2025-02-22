@@ -26,9 +26,9 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
-import { Button } from '../../../components/Button';
-import { Loading } from '../../../components/Loading';
-import { ScrollScreenContainer } from '../../../components/ScrollScreenContainer';
+import { Button } from '@/components/Button';
+import { Loading } from '@/components/Loading';
+import { ScrollScreenContainer } from '@/components/ScrollScreenContainer';
 
 import { TipoDivergencia } from '@/services/requests/divergences/types';
 import { createDivergenceRequest } from '@/services/requests/divergences/utils';

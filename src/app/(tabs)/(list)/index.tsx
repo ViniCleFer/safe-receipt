@@ -1,25 +1,31 @@
-import { useCallback } from 'react';
-import { router } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { HStack, Pressable, Text, useTheme } from 'native-base';
+import { useCallback } from 'react';
 
-import { Card } from '../../components/Card';
-import { ScrollScreenContainer } from '../../components/ScrollScreenContainer';
+import { Card } from '@/components/Card';
+import { ScrollScreenContainer } from '@/components/ScrollScreenContainer';
+import { router } from 'expo-router';
 
-export default function SelectDivergencyType() {
+export default function SelectFormType() {
   const { colors } = useTheme();
   const { navigate } = router;
 
-  const handleDivergency = useCallback(
-    (type: 'falta' | 'sobra' | 'inversa') => {
-      navigate(`/(auth)/divergency/${type}`);
-    },
-    [navigate],
-  );
+  const handleListFormPtp = useCallback(() => {
+    navigate('/forms-ptp-list');
+  }, [navigate]);
+
+  const handleListLaudoCrm = useCallback(() => {
+    navigate('/laudos-crm-list');
+  }, [navigate]);
+
+  const handleListDivergencia = useCallback(() => {
+    navigate('/divergencies-list');
+  }, [navigate]);
 
   return (
-    <ScrollScreenContainer subtitle="Selecione o tipo de Divergência">
-      <Pressable onPress={() => handleDivergency('falta')}>
+    <ScrollScreenContainer subtitle="Selecione o evento para listagem">
+      <Pressable onPress={handleListFormPtp}>
         <Card
           bg="white"
           mt="8px"
@@ -30,17 +36,17 @@ export default function SelectDivergencyType() {
         >
           <HStack bg="white" alignItems="center" space={3}>
             <MaterialIcons
-              name="warning"
+              name="receipt-long"
               size={30}
               color={colors.primary[700]}
             />
             <Text color="gray.700" fontSize="lg">
-              Falta
+              PTP Logístico
             </Text>
           </HStack>
         </Card>
       </Pressable>
-      <Pressable onPress={() => handleDivergency('sobra')}>
+      <Pressable onPress={handleListLaudoCrm}>
         <Card
           bg="white"
           mt="8px"
@@ -51,17 +57,17 @@ export default function SelectDivergencyType() {
         >
           <HStack bg="white" alignItems="center" space={3}>
             <MaterialIcons
-              name="warning"
+              name="note-alt"
               size={30}
               color={colors.primary[700]}
             />
             <Text color="gray.700" fontSize="lg">
-              Sobra
+              Laudo CRM
             </Text>
           </HStack>
         </Card>
       </Pressable>
-      <Pressable onPress={() => handleDivergency('inversa')}>
+      <Pressable onPress={handleListDivergencia}>
         <Card
           bg="white"
           mt="8px"
@@ -72,12 +78,12 @@ export default function SelectDivergencyType() {
         >
           <HStack bg="white" alignItems="center" space={3}>
             <MaterialIcons
-              name="warning"
+              name="difference"
               size={30}
               color={colors.primary[700]}
             />
             <Text color="gray.700" fontSize="lg">
-              Inversão
+              Divergência
             </Text>
           </HStack>
         </Card>

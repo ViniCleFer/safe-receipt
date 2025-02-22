@@ -25,7 +25,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 
 import { Button } from '@/components/Button';
 import { Loading } from '@/components/Loading';
-import { Backdrop } from '@/components/Backdrop';
 import { RadioInput } from '@/components/RadioInput';
 import { SelectWithLabel } from '@/components/SelectWithLabel';
 import { InputWithLabelControlled } from '@/components/InputControlled';
@@ -305,7 +304,7 @@ export default function FormPtp() {
             [
               {
                 text: 'Fechar',
-                onPress: () => push(`/(auth)/laudo-crm/${selectedFormPtp?.id}`),
+                onPress: () => push(`/laudo-crm/${selectedFormPtp?.id}`),
               },
             ],
           );
@@ -316,7 +315,7 @@ export default function FormPtp() {
             [
               {
                 text: 'Fechar',
-                onPress: () => replace('/(auth)/dashboard'),
+                onPress: () => replace('/(tabs)/(list)'),
               },
             ],
           );
