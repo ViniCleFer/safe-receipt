@@ -8,7 +8,7 @@ import { z } from 'zod';
 import * as Constants from 'expo-constants';
 import { Redirect, router } from 'expo-router';
 
-import Logo from '@/assets/ype.png';
+import Logo from '@/assets/icon-vfcode.png';
 
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
@@ -18,8 +18,8 @@ import useAuthStore from '@/store/auth';
 import { supabase } from '@/lib/supabase';
 
 // import { setUserLocalStorage } from '@/services/requests/auth/helpers';
-import { useAuth } from '@/contexts/AuthContext';
-import { Session } from '@supabase/supabase-js';
+// import { useAuth } from '@/contexts/AuthContext';
+// import { Session } from '@supabase/supabase-js';
 import { InputNormal } from '@/components/InputNormal';
 
 interface FormData {
@@ -42,8 +42,8 @@ export default function SignIn() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [closedEyes, setClosedEyes] = useState(true);
-  const [email, setEmail] = useState('vini@teste.com');
-  const [password, setPassword] = useState('#opssh!');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   const {
     formState: { errors },
@@ -134,19 +134,27 @@ export default function SignIn() {
       {/* <Text color="gray.750" mb={10}>
         EHS
       </Text> */}
-      <Image
-        alt="logo"
-        source={Logo}
-        defaultSource={Logo}
-        width={'60%'}
-        height={'25%'}
-        resizeMode="contain"
-        ml={5}
-      />
+      <Box
+        height="100px"
+        width="100px"
+        alignItems="center"
+        justifyContent="center"
+        mb={10}
+        borderRadius={10}
+        overflow={'hidden'}
+      >
+        <Image
+          alt="logo ehs"
+          source={Logo}
+          defaultSource={Logo}
+          height={'100%'}
+          resizeMode="contain"
+        />
+      </Box>
 
       <InputNormal
-        label="LOGIN"
-        placeholder="E-mail ou RE"
+        label="E-MAIL"
+        placeholder="Digite seu e-mail"
         autoCapitalize="none"
         autoCorrect={false}
         keyboardType="email-address"
@@ -173,7 +181,7 @@ export default function SignIn() {
       <InputNormal
         label="SENHA"
         error={errors.password?.message}
-        placeholder="Senha"
+        placeholder="Digite sua senha"
         secureTextEntry={closedEyes}
         autoComplete="off"
         _focus={{ borderColor: 'primary.700' }}

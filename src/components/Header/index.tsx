@@ -13,22 +13,24 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Platform, useWindowDimensions } from 'react-native';
 
-import LogoYpe from '@/assets/ype.png';
+// import LogoYpe from '@/assets/ype.png';
 import useAuthStore from '@/store/auth';
 import { supabase } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
+import { useRouter } from 'expo-router';
 // import useFactoryPlantStore from '../../store/factories';
 
 interface HeaderProps extends IContainerProps {}
 
 export const Header = ({ ...rest }: HeaderProps) => {
   const { colors } = useTheme();
-  const { goBack } = useNavigation();
   const navigationState = useNavigationState(state => state);
 
   const { width } = useWindowDimensions();
 
-  const user = useAuthStore(state => state.user);
+  const router = useRouter();
+
+  const { user, setUserAuthenticated } = useAuthStore(state => state);
 
   // const factoriesPlant = useFactoryPlantStore(state => state.factoriesPlant);
   // const setFactoriesPlant = useFactoryPlantStore(
@@ -93,7 +95,10 @@ export const Header = ({ ...rest }: HeaderProps) => {
       console.error('Error logging out:', error.message);
       return;
     }
-  }, [supabase]);
+
+    setUserAuthenticated(null, null);
+    router.replace('/(auth)');
+  }, [supabase, router, setUserAuthenticated]);
 
   // const update = useCallback(async () => {
   //   const data = {
@@ -122,9 +127,10 @@ export const Header = ({ ...rest }: HeaderProps) => {
       // pb={hasNavigation ? 0 : Platform.OS === 'android' ? 0 : '4px'}
       width={width}
       maxW={width}
-      justifyContent={hasNavigation ? 'space-between' : 'flex-start'}
+      // justifyContent={hasNavigation ? 'space-between' : 'flex-start'}
+      justifyContent={'space-between'}
       alignItems="center"
-      pt={Platform.OS === 'android' ? '24px' : '50px'}
+      pt={Platform.OS === 'android' ? '36px' : '50px'}
       shadow="8"
       {...rest}
     >
@@ -136,7 +142,7 @@ export const Header = ({ ...rest }: HeaderProps) => {
             borderRadius={4}
             justifyContent="center"
             alignItems="center"
-            onPress={goBack}
+            onPress={() => router.back()}
           >
             <MaterialIcons
               name={'arrow-back-ios'}
@@ -148,22 +154,24 @@ export const Header = ({ ...rest }: HeaderProps) => {
 
         {hasNavigation ? (
           <Text fontSize="xl" fontWeight="medium" textTransform="capitalize">
-            {user?.user_metadata?.name?.split(' ')?.length > 2
+            {/* {user?.user_metadata?.name?.split(' ')?.length > 2
               ? user?.user_metadata?.name?.split(' ')[0]
-              : user?.user_metadata?.name}
+              : user?.user_metadata?.name} */}
+            Admin
           </Text>
         ) : (
           <VStack width="75%">
             <Text fontSize="xl" fontWeight="medium" textTransform="capitalize">
-              {user?.user_metadata?.name?.split(' ')?.length > 2
-                ? user?.user_metadata?.name?.split(' ')[0]
-                : user?.user_metadata?.name}
+              {/* {user?.user_metadata?.name?.split(' ')?.length > 2
+              ? user?.user_metadata?.name?.split(' ')[0]
+              : user?.user_metadata?.name} */}
+              Admin
             </Text>
           </VStack>
         )}
       </HStack>
       <HStack alignItems="center" space={2}>
-        <Image
+        {/* <Image
           mb={0.5}
           ml={-3}
           mr={-1}
@@ -173,19 +181,17 @@ export const Header = ({ ...rest }: HeaderProps) => {
           height={16}
           resizeMode="contain"
           alt="logo"
-        />
-
-        <Pressable
-          p={1}
-          mr={2}
-          borderRadius={4}
-          justifyContent="center"
-          position="relative"
-          onPress={signOut}
-        >
-          <MaterialIcons name="logout" color={colors.primary[700]} size={28} />
-        </Pressable>
+        /> */}
       </HStack>
+      <Pressable
+        p={1}
+        borderRadius={4}
+        justifyContent="center"
+        position="relative"
+        onPress={signOut}
+      >
+        <MaterialIcons name="logout" color={colors.primary[700]} size={28} />
+      </Pressable>
     </HStack>
   );
 };

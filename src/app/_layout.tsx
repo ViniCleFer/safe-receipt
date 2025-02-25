@@ -45,13 +45,14 @@ export default function RootLayout() {
         // await Font.loadAsync(FontAwesome.font);
         // Artificially delay for two seconds to simulate a slow loading
         // experience. Remove this if you copy and paste the code!
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 5000));
 
-        return Alert.alert('Iniciando o App', 'O app está sendo carregado');
+        // return Alert.alert('Iniciando o App', 'O app está sendo carregado');
       } catch (e) {
         console.warn(e);
       } finally {
         // Tell the application to render
+        SplashScreen.hide();
         setAppIsReady(true);
       }
     }
@@ -59,13 +60,12 @@ export default function RootLayout() {
     prepare();
   }, []);
 
-  const onLayoutRootView = useCallback(() => {
-    if (appIsReady) {
-      // setLoading(false);
-      console.log('RootLayout -> onLayoutRootView -> appIsReady', appIsReady);
-      SplashScreen.hide();
-    }
-  }, [appIsReady]);
+  // const onLayoutRootView = useCallback(() => {
+  //   if (appIsReady) {
+  //     // setLoading(false);
+  //     console.log('RootLayout -> onLayoutRootView -> appIsReady', appIsReady);
+  //   }
+  // }, [appIsReady]);
 
   if (!appIsReady) {
     return (
@@ -83,7 +83,7 @@ export default function RootLayout() {
           barStyle="dark-content"
           translucent
         />
-        <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+        <View style={{ flex: 1 }}>
           {/* <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" />
             <Stack.Screen name="sign-up" />

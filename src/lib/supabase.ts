@@ -37,8 +37,8 @@ import { createClient } from '@supabase/supabase-js';
 
 import { env } from './env';
 
-const supabaseUrl = env.EXPO_PUBLIC_SUPABASE_PROJECT_URL;
-const supabaseAnonKey = env.EXPO_PUBLIC_SUPABASE_ANON_API_KEY;
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_PROJECT_URL!;
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_API_KEY!;
 
 // Use a custom secure storage solution for the Supabase client to store the JWT
 const ExpoSecureStoreAdapter = {

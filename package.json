@@ -1,7 +1,7 @@
 {
   "name": "safe-receipt",
   "main": "expo-router/entry",
-  "version": "1.0.0",
+  "version": "1.0.5",
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
@@ -27,6 +27,7 @@
     "dayjs": "^1.11.13",
     "expo": "~52.0.27",
     "expo-camera": "~16.0.14",
+    "expo-dev-client": "~5.0.12",
     "expo-font": "~13.0.3",
     "expo-image": "~2.0.4",
     "expo-image-picker": "~16.0.4",

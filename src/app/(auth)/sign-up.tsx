@@ -8,7 +8,7 @@ import { z } from 'zod';
 import * as Constants from 'expo-constants';
 import { router } from 'expo-router';
 
-import Logo from '@/assets/ype.png';
+import Logo from '@/assets/icon-vfcode.png';
 
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
@@ -110,15 +110,23 @@ export default function SignUp() {
       {/* <Text color="gray.750" mb={10}>
         EHS
       </Text> */}
-      <Image
-        alt="logo"
-        source={Logo}
-        defaultSource={Logo}
-        width={'60%'}
-        height={'25%'}
-        resizeMode="contain"
-        ml={5}
-      />
+      <Box
+        height="100px"
+        width="100px"
+        alignItems="center"
+        justifyContent="center"
+        mb={10}
+        borderRadius={10}
+        overflow={'hidden'}
+      >
+        <Image
+          alt="logo ehs"
+          source={Logo}
+          defaultSource={Logo}
+          height={'100%'}
+          resizeMode="contain"
+        />
+      </Box>
 
       <Input
         label="NAME"
@@ -185,6 +193,16 @@ export default function SignUp() {
         disabled={isLoading}
         leftIcon={<Icon as={MaterialIcons} name="login" size="md" />}
       />
+
+      <Link
+        onPress={() => {
+          router.navigate('/');
+        }}
+        alignSelf="center"
+        padding={2}
+      >
+        Voltar para o login
+      </Link>
 
       {/* <Button
         backgroundColor="primary.700"

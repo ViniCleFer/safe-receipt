@@ -1,17 +1,18 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigation } from '@react-navigation/native';
-import { Image, VStack } from 'native-base';
+import { Box, Image, Link, VStack } from 'native-base';
 import { useCallback, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Alert } from 'react-native';
 import { z } from 'zod';
 
-import LogoEHS from '@/assets/ype.png';
+import Logo from '@/assets/icon-vfcode.png';
 
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 
 import { supabase } from '@/lib/supabase';
+import { router } from 'expo-router';
 
 interface FormData {
   email: string;
@@ -101,29 +102,33 @@ export default function ForgotPassword() {
         disabled={isLoading}
       />
 
-      <Button
-        title="Voltar"
-        mt={3}
-        _pressed={{ bg: 'primary.100' }}
-        variant={'outline'}
-        color="primary.700"
-        borderColor="primary.700"
-        _text={{
-          color: 'primary.700',
-          fontWeight: 'bold',
+      <Link
+        onPress={() => {
+          router.navigate('/');
         }}
-        onPress={goBack}
-        disabled={isLoading}
-      />
-      <Image
-        alt="logo ehs"
-        source={LogoEHS}
-        defaultSource={LogoEHS}
-        width={'80%'}
-        height={'35%'}
-        resizeMode="contain"
-        ml={5}
-      />
+        alignSelf="center"
+        padding={2}
+        mt={2}
+      >
+        Voltar para o login
+      </Link>
+      <Box
+        height="200px"
+        width="200px"
+        alignItems="center"
+        justifyContent="center"
+        mt={20}
+        borderRadius={10}
+        overflow={'hidden'}
+      >
+        <Image
+          alt="logo ehs"
+          source={Logo}
+          defaultSource={Logo}
+          height={'100%'}
+          resizeMode="contain"
+        />
+      </Box>
     </VStack>
   );
 }
