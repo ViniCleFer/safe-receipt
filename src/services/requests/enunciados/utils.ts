@@ -31,7 +31,10 @@ export async function getEnunciadosRequest(
   // console.log('response', JSON.stringify(response, null, 2));
 
   // return response;
-  const { data, error } = await supabase.from('enunciados').select();
+  const { data, error } = await supabase
+    .from('enunciados')
+    .select()
+    .eq('ativo', 'true');
 
   if (error) {
     console.error('Error createFormPtpRequest', JSON.stringify(error, null, 2));
@@ -112,7 +115,7 @@ export async function createEnunciadoRequest() {
   const { error, data } = await supabase.from('enunciados').insert({
     id: '02000606-d328-4908-ac23-111fb651b873',
     descricao:
-      'Data de Validade correta legível e dentro do prazo comercial\n Produtos com validade de 6 meses podem ser expedidos com 4 meses, Produtos com validade de 12 meses podem ser expedidos com 8 meses, Produtos com validade de 24 meses podem ser expedidos com 16 meses.',
+      'Data de Validade correta legível e dentro do prazo comercial\nProdutos com validade de 6 meses podem ser expedidos com 4 meses, Produtos com validade de 12 meses podem ser expedidos com 8 meses, Produtos com validade de 24 meses podem ser expedidos com 16 meses.',
     posicao: 6,
     ativo: true,
     grupo: 'CAIXA_E_FARDO',
