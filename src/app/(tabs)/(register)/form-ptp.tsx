@@ -300,7 +300,7 @@ export default function FormPtp() {
 
           return Alert.alert(
             'Sucesso!',
-            'Respostas do PTP cadastradas com sucesso! \n Você será redirecionado para preencher o Laudo CRM',
+            'Respostas do PTP cadastradas com sucesso!\nVocê será redirecionado para preencher o Laudo CRM',
             [
               {
                 text: 'Fechar',
@@ -311,7 +311,7 @@ export default function FormPtp() {
         } else {
           return Alert.alert(
             'Sucesso!',
-            'Respostas do PTP cadastradas com sucesso! \n Não há necessidade de preencher o Laudo CRM',
+            'Respostas do PTP cadastradas com sucesso!\nNão há necessidade de preencher o Laudo CRM',
             [
               {
                 text: 'Fechar',
@@ -323,8 +323,8 @@ export default function FormPtp() {
       } else {
         Alert.alert(
           'Salvar Resposta do PTP',
-          `Ocorreu um erro ao salvar a Resposta do PTP, tente novamente mais tarde. \n 
-          ${respostaErro?.length > 1 ? 'Itens com erro' : 'Item com erro'} \n
+          `Ocorreu um erro ao salvar a Resposta do PTP, tente novamente mais tarde.\n 
+          ${respostaErro?.length > 1 ? 'Itens com erro' : 'Item com erro'}\n
           ${
             respostaErro?.length > 1
               ? respostaErro?.map(item => item.enunciado_id).join(', ')
