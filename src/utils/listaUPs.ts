@@ -47,6 +47,14 @@ export const listaUPsOrigem = [
     label: 'UP12 - Pernambuco',
     value: 'UP12',
   },
+  {
+    label: 'LN01 - Lonado',
+    value: 'LN01',
+  },
+  {
+    label: 'LN02 - Lonado',
+    value: 'LN02',
+  },
 ];
 
 export const listaCDsOrigem = [
@@ -59,8 +67,8 @@ export const listaCDsOrigem = [
     value: 'CD02',
   },
   {
-    label: 'CD011 - Simões Filho',
-    value: 'CD011',
+    label: 'CD11 - Simões Filho',
+    value: 'CD11',
   },
   {
     label: 'CD16 - Goiânia',
