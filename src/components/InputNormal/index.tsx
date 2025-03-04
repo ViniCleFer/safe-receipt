@@ -11,10 +11,21 @@ type InputProps = IInputProps & {
   error?: string;
 };
 
-export function InputNormal({ label, error, color, mb, ...rest }: InputProps) {
+export function InputNormal({
+  label,
+  error,
+  color,
+  mb,
+  textTransform = 'uppercase',
+  ...rest
+}: InputProps) {
   return (
     <View mb={mb || 8}>
-      <Text mb={-2} textTransform="uppercase" color={color || 'primary.700'}>
+      <Text
+        mb={-2}
+        textTransform={textTransform}
+        color={color || 'primary.700'}
+      >
         {label}
       </Text>
 

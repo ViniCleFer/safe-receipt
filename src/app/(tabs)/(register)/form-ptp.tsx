@@ -22,6 +22,7 @@ import { Alert } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { mask } from 'remask';
 
 import { Button } from '@/components/Button';
 import { Loading } from '@/components/Loading';
@@ -39,13 +40,17 @@ import {
   GrupoEnunciado,
   EnunciadoToList,
 } from '@/services/requests/enunciados/types';
-import { FormPtpStatus } from '@/services/requests/forms-ptp/types';
+import {
+  FormPtpStatus,
+  TipoCodigoProduto,
+} from '@/services/requests/forms-ptp/types';
 import { createFormPtpRequest } from '@/services/requests/forms-ptp/utils';
 import { getEnunciadosRequest } from '@/services/requests/enunciados/utils';
 import { FormPtpAnswerPost } from '@/services/requests/form-ptp-answers/types';
 import { createFormPtpAnswerRequest } from '@/services/requests/form-ptp-answers/utils';
 
 import useFormPtpStore from '@/store/forms-ptp';
+import { InputNormal } from '@/components/InputNormal';
 
 const formAnswersSchema = z.object({
   respostas: z
@@ -53,7 +58,6 @@ const formAnswersSchema = z.object({
       z.object({
         form_ptp_id: z.string().min(1, 'Campo obrigatório'),
         enunciado_id: z.string().min(1, 'Campo obrigatório'),
-        qtdAnalisada: z.number().min(1, 'Campo obrigatório'),
         codProduto: z.string().min(1, 'Campo obrigatório'),
         naoConformidade: z.string().min(1, 'Campo obrigatório'),
         detalheNaoConformidade: z.array(z.string()).optional(),
@@ -78,9 +82,14 @@ export default function FormPtp() {
 
   const [dataIdentificacao, setDataIdentificacao] = useState(new Date());
   const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
-  const [conferente, setConferente] = useState('');
-  const [nota, setNota] = useState('');
+  const [conferente, setConferente] = useState('Teste');
+  const [nota, setNota] = useState('1234234');
   const [up, setUp] = useState('');
+  const [codProduto, setCodProduto] = useState('');
+  const [qtdAnalisada, setQtdAnalisada] = useState('');
+  const [tipoCodigoProduto, setTipoCodigoProduto] = useState<TipoCodigoProduto>(
+    TipoCodigoProduto.EXCLUSIVO,
+  );
   const [enunciadosList, setEnunciadosList] = useState<
     {
       grupoFormatado: string;
@@ -98,7 +107,6 @@ export default function FormPtp() {
         grupo?.enunciados?.map(() => ({
           form_ptp_id: '',
           enunciado_id: '',
-          qtdAnalisada: 0,
           codProduto: '',
           naoConformidade: 'nao',
           detalheNaoConformidade: [],
@@ -188,6 +196,8 @@ export default function FormPtp() {
       notaFiscal: nota,
       opcaoUp: up,
       status: FormPtpStatus.EM_ANDAMENTO,
+      qtdAnalisada: Number(qtdAnalisada),
+      tipoCodigoProduto: tipoCodigoProduto,
     };
 
     // console.log('formPtp', JSON.stringify(data, null, 2));
@@ -210,11 +220,28 @@ export default function FormPtp() {
       );
     }
     setIsLoading(false);
-  }, [dataIdentificacao, conferente, nota, up, setSelectedFormPtp]);
+  }, [
+    dataIdentificacao,
+    conferente,
+    nota,
+    up,
+    qtdAnalisada,
+    tipoCodigoProduto,
+    setSelectedFormPtp,
+  ]);
 
   const handleSaveFormPtpAnswers = useCallback(async () => {
     const itensProcessados: any[] = [];
     setIsLoading(true);
+
+    if (tipoCodigoProduto === TipoCodigoProduto.EXCLUSIVO && !codProduto) {
+      Alert.alert(
+        'Salvar Respostas PTP',
+        'Por favor, preencha o campo Código Produto ele é obrigatório.',
+      );
+      setIsLoading(false);
+      return;
+    }
 
     const respostas = getValues('respostas');
     console.log('respostas', JSON.stringify(respostas, null, 2));
@@ -222,19 +249,22 @@ export default function FormPtp() {
     try {
       for await (const resposta of respostas) {
         const haNaoConformidade = resposta?.naoConformidade === 'sim';
+        const codProdutoCorreto =
+          tipoCodigoProduto === TipoCodigoProduto.EXCLUSIVO
+            ? codProduto
+            : resposta?.codProduto;
 
         const data: FormPtpAnswerPost = {
           form_ptp_id: selectedFormPtp?.id!,
           enunciado_id: resposta?.enunciado_id,
-          qtdAnalisada: resposta?.qtdAnalisada,
-          codProduto: resposta?.codProduto,
+          codProduto: codProdutoCorreto,
           naoConformidade: haNaoConformidade,
           detalheNaoConformidade: haNaoConformidade
             ? resposta?.detalheNaoConformidade
             : [],
-          lote: resposta?.lote ? resposta?.lote : null,
-          qtdPalletsNaoConforme: 0,
-          qtdCaixasNaoConforme: 0,
+          lote: haNaoConformidade ? resposta?.lote : null,
+          qtdPalletsNaoConforme: Number(resposta?.qtdPalletsNaoConforme),
+          qtdCaixasNaoConforme: Number(resposta?.qtdCaixasNaoConforme),
           necessitaCrm: haNaoConformidade,
         };
 
@@ -250,7 +280,10 @@ export default function FormPtp() {
         ) {
           itensProcessados.push({
             ...response?.data[0],
-            codigoProdutos: resposta?.lote ? resposta?.codProduto : [],
+            codigoProdutos: haNaoConformidade ? codProdutoCorreto : [],
+            qtdCaixasNaoConformes: haNaoConformidade
+              ? resposta?.qtdCaixasNaoConforme
+              : [],
             status: 'Sucesso',
           });
         } else {
@@ -291,6 +324,9 @@ export default function FormPtp() {
               ?.filter(Boolean) as string[],
             codigoProdutos: itensProcessados
               ?.map(item => item?.codigoProdutos)
+              ?.filter(Boolean) as string[],
+            qtdCaixasNaoConformes: itensProcessados
+              ?.map(item => item?.qtdCaixasNaoConformes)
               ?.filter(Boolean) as string[],
             detalheNaoConformidade: itensProcessados
               ?.map(item => item?.detalheNaoConformidade)
@@ -475,6 +511,54 @@ export default function FormPtp() {
             isDisabled={showEnunciados}
           />
 
+          <SelectWithLabel
+            label="Quantidade analisada"
+            selectedValue={qtdAnalisada}
+            onValueChange={setQtdAnalisada}
+            options={Array.from({ length: 30 })?.map((_, index) => (
+              <Select.Item
+                key={String(index + 1)}
+                label={String(index + 1)}
+                value={String(index + 1)}
+              />
+            ))}
+            isDisabled={showEnunciados}
+          />
+
+          <Box mb={1} width="100%">
+            <Text mb={3} color="gray.750">
+              Tipo do Código Produto
+            </Text>
+            <Radio.Group
+              name="tipoCodigoProduto"
+              value={tipoCodigoProduto}
+              onChange={t => setTipoCodigoProduto(t as TipoCodigoProduto)}
+              flexDirection="row"
+              space={3}
+              alignItems={'center'}
+              width="100%"
+              style={{ gap: 10 }}
+              isDisabled={showEnunciados}
+            >
+              <RadioInput
+                // isDisabled={showEnunciados}
+                value={TipoCodigoProduto.MISTO}
+              >
+                <Text>Misto</Text>
+              </RadioInput>
+              <RadioInput
+                // isDisabled={showEnunciados}
+                value={TipoCodigoProduto.EXCLUSIVO}
+                ml={5}
+                _disabled={{
+                  opacity: 1,
+                }}
+              >
+                <Text>Excluisivo</Text>
+              </RadioInput>
+            </Radio.Group>
+          </Box>
+
           {!showEnunciados && (
             <HStack width="100%" justifyContent="space-between" mt={4}>
               <Button
@@ -531,6 +615,19 @@ export default function FormPtp() {
               <VStack px={2} space={2} mb="20%" pt={2}>
                 {enunciadosList?.length > 0 && (
                   <>
+                    {tipoCodigoProduto === TipoCodigoProduto.EXCLUSIVO && (
+                      <InputNormal
+                        label="Código Produto"
+                        value={codProduto}
+                        onChangeText={value =>
+                          setCodProduto(mask(value, '99.999999'))
+                        }
+                        maxLength={9}
+                        textTransform="none"
+                        keyboardType="numeric"
+                      />
+                    )}
+
                     {enunciadosList?.map((enunciado, grupoIndex) => {
                       return (
                         <Fragment key={grupoIndex}>
@@ -555,28 +652,18 @@ export default function FormPtp() {
                                   {`${item?.posicao}) ${item?.descricao}`}
                                 </Text>
 
-                                <SelectWithLabelControlled
-                                  label="Quantidade analisada"
-                                  control={control}
-                                  index={index}
-                                  name="qtdAnalisada"
-                                  options={Array.from({ length: 30 })?.map(
-                                    (_, index) => (
-                                      <Select.Item
-                                        key={String(index + 1)}
-                                        label={String(index + 1)}
-                                        value={String(index + 1)}
-                                      />
-                                    ),
-                                  )}
-                                />
-
-                                <InputWithLabelControlled
-                                  label="Código Produto"
-                                  control={control}
-                                  index={index}
-                                  name="codProduto"
-                                />
+                                {tipoCodigoProduto ===
+                                  TipoCodigoProduto.MISTO && (
+                                  <InputWithLabelControlled
+                                    label="Código Produto"
+                                    control={control}
+                                    index={index}
+                                    name="codProduto"
+                                    keyboardType="numeric"
+                                    multiline
+                                    numberOfLines={4}
+                                  />
+                                )}
 
                                 <Box mb={1} width="100%">
                                   <Text mb={3} color="gray.750">
@@ -616,57 +703,60 @@ export default function FormPtp() {
 
                                 {respostas[index]?.naoConformidade ===
                                   'sim' && (
-                                  <InputWithLabelControlled
-                                    label="Lote"
-                                    control={control}
-                                    index={index}
-                                    name="lote"
-                                  />
-                                )}
-
-                                {respostas[index]?.naoConformidade ===
-                                  'sim' && (
-                                  <Box mb={1} width="100%">
-                                    <ConformidadesCheckboxControlled
-                                      label="Selecione as Não conformidades"
+                                  <>
+                                    <InputWithLabelControlled
+                                      label="Lote"
                                       control={control}
                                       index={index}
-                                      name="detalheNaoConformidade"
+                                      name="lote"
+                                      keyboardType="numeric"
+                                      autoCorrect={false}
+                                      maxLength={10}
                                     />
-                                  </Box>
+
+                                    {item?.posicao === 5 &&
+                                    item?.grupo ===
+                                      GrupoEnunciado.PALETE ? null : (
+                                      <Box mb={1} width="100%">
+                                        <ConformidadesCheckboxControlled
+                                          label="Selecione as Não conformidades"
+                                          control={control}
+                                          index={index}
+                                          name="detalheNaoConformidade"
+                                          optionNaoConformidadesList={
+                                            item?.opcoesNaoConformidades
+                                          }
+                                          isChecked={item?.isChecked}
+                                        />
+                                      </Box>
+                                    )}
+
+                                    <SelectWithLabelControlled
+                                      label="Qtde de pallets não conforme?"
+                                      control={control}
+                                      index={index}
+                                      name="qtdPalletsNaoConforme"
+                                      options={Array.from({ length: 30 })?.map(
+                                        (_, index) => (
+                                          <Select.Item
+                                            key={String(index + 1)}
+                                            label={String(index + 1)}
+                                            value={String(index + 1)}
+                                          />
+                                        ),
+                                      )}
+                                    />
+
+                                    <InputWithLabelControlled
+                                      label="Qtde de caixas não conforme?"
+                                      control={control}
+                                      index={index}
+                                      name="qtdCaixasNaoConforme"
+                                      keyboardType="numeric"
+                                      autoCorrect={false}
+                                    />
+                                  </>
                                 )}
-
-                                <SelectWithLabelControlled
-                                  label="Qtde de pallets não conforme?"
-                                  control={control}
-                                  index={index}
-                                  name="qtdPalletsNaoConforme"
-                                  options={Array.from({ length: 30 })?.map(
-                                    (_, index) => (
-                                      <Select.Item
-                                        key={String(index + 1)}
-                                        label={String(index + 1)}
-                                        value={String(index + 1)}
-                                      />
-                                    ),
-                                  )}
-                                />
-
-                                <SelectWithLabelControlled
-                                  label="Qtde de caixas não conforme?"
-                                  control={control}
-                                  index={index}
-                                  name="qtdCaixasNaoConforme"
-                                  options={Array.from({ length: 30 })?.map(
-                                    (_, index) => (
-                                      <Select.Item
-                                        key={String(index + 1)}
-                                        label={String(index + 1)}
-                                        value={String(index + 1)}
-                                      />
-                                    ),
-                                  )}
-                                />
                               </VStack>
                             );
                           })}

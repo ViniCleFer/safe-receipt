@@ -12,7 +12,6 @@ export interface FormPtpAnswer {
   id: string;
   form_ptp_id: string;
   enunciado: Enunciado;
-  qtdAnalisada: number;
   codProduto: string;
   lote: string | null;
   naoConformidade: boolean;
@@ -28,7 +27,6 @@ export interface FormPtpAnswer {
 export interface FormPtpAnswerPost {
   form_ptp_id: string;
   enunciado_id: string;
-  qtdAnalisada: number;
   codProduto: string;
   naoConformidade: boolean;
   detalheNaoConformidade: string[] | any;

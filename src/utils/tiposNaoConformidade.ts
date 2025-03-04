@@ -16,6 +16,10 @@ export const tiposNaoConformidade = [
     value: 'PALLET_COM_STRECH_RASGADO',
   },
   {
+    label: 'PALLET SEM STRECH NO PE',
+    value: 'PALLET_SEM_STRECH_NO_PE',
+  },
+  {
     label: 'PALLET COM SUJIDADE',
     value: 'PALLET_COM_SUJIDADE',
   },
@@ -26,5 +30,25 @@ export const tiposNaoConformidade = [
   {
     label: 'PALLET QUEBRADO',
     value: 'PALLET_QUEBRADO',
+  },
+  {
+    label: 'PALLET TOMBADO',
+    value: 'PALLET_TOMBADO',
+  },
+  {
+    label: 'CAIXA SEM ETIQUETA',
+    value: 'CAIXA_SEM_ETIQUETA',
+  },
+  {
+    label: 'CAIXA COM MAIS DE UMA ETIQUETA',
+    value: 'CAIXA_COM_MAIS_DE_UMA_ETIQUETA',
+  },
+  {
+    label: 'ETIQUETA NÃO EQUIVALE AO PRODUTO',
+    value: 'ETIQUETA_NAO_EQUIVALE_AO_PRODUTO',
+  },
+  {
+    label: 'PRODUTO EM SHELF LIFE',
+    value: 'PRODUTO_EM_SHELF_LIFE',
   },
 ];

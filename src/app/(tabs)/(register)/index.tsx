@@ -18,6 +18,10 @@ export default function SelectFormType() {
     navigate('/select-divergency-type');
   }, [navigate]);
 
+  // const handleCreateLaudoCrm = useCallback(() => {
+  //   navigate('/laudo-crm/1234123421342134');
+  // }, [navigate]);
+
   return (
     <ScrollScreenContainer subtitle="Selecione o tipo de formulário para cadastro">
       <Pressable onPress={handleCreateFormPtp}>

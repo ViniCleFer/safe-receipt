@@ -17,6 +17,7 @@ import {
   Image,
   Input,
   Pressable,
+  Radio,
   Select,
   Text,
   useTheme,
@@ -28,6 +29,7 @@ import { Alert, StyleSheet, TouchableOpacity } from 'react-native';
 import { shade } from 'polished';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { decode } from 'base64-arraybuffer';
+import { mask } from 'remask';
 
 import { Button } from '@/components/Button';
 import { Loading } from '@/components/Loading';
@@ -38,18 +40,22 @@ import { ConformidadesCheckbox } from '@/components/ConformidadesCheckbox';
 import { listaTurnos } from '@/utils/listaTurnos';
 import { generateFolderName } from '@/utils/generateFoldername';
 import { listaUPsOrigem, listaCDsOrigem } from '@/utils/listaUPs';
-import { removeDuplicatesItems } from '@/utils/removeDuplicatesItems';
 
-import useQuestionStore from '@/store/questions';
-
-import { LaudoCrmPost, Turno } from '@/services/requests/laudos/types';
+import {
+  LaudoCrmPost,
+  TipoEvidencia,
+  Turno,
+} from '@/services/requests/laudos/types';
 import { createLaudoCrmRequest } from '@/services/requests/laudos/utils';
-import { FormPtpAnswer } from '@/services/requests/form-ptp-answers/types';
-import { getFormsPtpAnswerByFormPtpIdRequest } from '@/services/requests/form-ptp-answers/utils';
 
 import { supabase } from '@/lib/supabase';
 import useAuthStore from '@/store/auth';
 import useFormPtpStore from '@/store/forms-ptp';
+import { RadioInput } from '@/components/RadioInput';
+import { tiposDivergencia } from '@/utils/tiposDivergencia';
+import { TipoDivergencia } from '@/services/requests/divergences/types';
+import { getNextStepsByDivergencyType } from '@/utils/getNextStepsByDivergencyType';
+import { createDivergenceRequest } from '@/services/requests/divergences/utils';
 
 const styles = StyleSheet.create({
   container: {
@@ -74,7 +80,7 @@ const styles = StyleSheet.create({
 
 export default function LaudoCrm() {
   const { colors } = useTheme();
-  const { replace, back } = router;
+  const { replace } = router;
 
   // const { id: formPtpId = '111f2687-9f88-4500-bf1b-eb2238d22750' } =
   const { id: formPtpId } = useLocalSearchParams<{ id: string }>();
@@ -102,6 +108,19 @@ export default function LaudoCrm() {
   const [cdOrigem, setCdOrigem] = useState('');
   const [lotes, setLotes] = useState('');
   const [codigoProdutos, setCodigoProdutos] = useState('');
+  const [qtdCaixasNaoConformes, setQtdCaixasNaoConformes] = useState('');
+  const [observacoes, setObservacoes] = useState('');
+  const [tipoEvidencia, setTipoEvidencia] = useState<TipoEvidencia | null>(
+    null,
+  );
+
+  const [haDivergencia, setHaDivergencia] = useState('nao');
+  const [divergenciaSelecionada, setDivergenciaSelecionada] =
+    useState<TipoDivergencia | null>(null);
+  const [sku, setSku] = useState('');
+  const [quantidade, setQuantidade] = useState('');
+  const [skuNotaFiscal, setSkuNotaFiscal] = useState('');
+  const [quantidadeNotaFiscal, setQuantidadeNotaFiscal] = useState('');
 
   const [naoConformidadesList, setNaoConformidadesList] = useState<any[]>([]);
 
@@ -178,12 +197,19 @@ export default function LaudoCrm() {
   useFocusEffect(
     useCallback(() => {
       console.log('formPtpId', formPtpId);
-      console.log('formPtpId', formPtpId);
       if (selectedFormPtp) {
         // loadFormPtp();
         setNotaFiscal(selectedFormPtp?.notaFiscal!);
+        setUpOrigem(selectedFormPtp?.opcaoUp!);
         setConferente(selectedFormPtp?.conferente!);
         setLotes(selectedFormPtp?.lotes!?.map(lote => lote).join(', '));
+        setQtdCaixasNaoConformes(
+          selectedFormPtp
+            ?.qtdCaixasNaoConformes!?.map(
+              qtdCaixasNaoConforme => qtdCaixasNaoConforme,
+            )
+            .join(', '),
+        );
         setCodigoProdutos(
           selectedFormPtp
             ?.codigoProdutos!?.filter(
@@ -214,10 +240,20 @@ export default function LaudoCrm() {
     setIsDatePickerVisible(false);
     setConferente('');
     setTurno('');
+    setObservacoes('');
+    setCdOrigem('');
+    setQtdCaixasNaoConformes('');
     setUpOrigem('');
     setImagesList([]);
     setLotes('');
     setCodigoProdutos('');
+    setHaDivergencia('nao');
+    setDivergenciaSelecionada(null);
+    setSku('');
+    setQuantidade('');
+    setImagesList([]);
+    setSkuNotaFiscal('');
+    setQuantidadeNotaFiscal('');
     setNaoConformidadesList([]);
     setSelectedFormPtp(null);
 
@@ -235,10 +271,10 @@ export default function LaudoCrm() {
       });
 
       if (!result?.canceled && result?.assets?.length > 0) {
-        const uri = result?.assets[0]?.uri;
-        const base64 = result?.assets[0]?.base64;
-        const filename = result?.assets[0]?.fileName;
-        const size = result?.assets[0]?.fileSize;
+        const uri = result?.assets[0]?.uri!;
+        const base64 = result?.assets[0]?.base64!;
+        const filename = result?.assets[0]?.fileName!;
+        const size = result?.assets[0]?.fileSize!;
 
         const mimetype = mime.getType(uri);
 
@@ -246,8 +282,10 @@ export default function LaudoCrm() {
 
         setImagesList(prevState => [
           ...prevState,
-          { uri, base64, mimetype, filename, size },
+          { uri, base64, mimetype, filename, size, type: tipoEvidencia },
         ]);
+
+        setTipoEvidencia(null);
       }
     } catch (error) {
       setLoadingPreview(false);
@@ -281,11 +319,13 @@ export default function LaudoCrm() {
             mimetype,
             size,
             filename,
+            type: tipoEvidencia,
           },
         ]);
 
         setIsCameraActive(false);
         setLoadingPreview(false);
+        setTipoEvidencia(null);
       }
       setIsCameraActive(false);
       setLoadingPreview(false);
@@ -299,18 +339,30 @@ export default function LaudoCrm() {
     }
   }, []);
 
-  const handleCamera = useCallback(() => {
-    console.log('permission', permission);
-    if (permission && !permission?.granted) {
-      requestPermission();
-    } else {
-      if (imagesList?.length >= 3) {
-        Alert.alert('Atenção', 'Você atingiu o limite de 3 imagens.');
+  const handleCamera = useCallback(
+    (tipoEvidencia: TipoEvidencia) => {
+      console.log('permission', permission);
+      if (permission && !permission?.granted) {
+        requestPermission();
       } else {
-        setIsCameraActive(true);
+        if (imagesList?.length >= 3) {
+          Alert.alert('Atenção', 'Você atingiu o limite de 3 imagens.');
+        } else {
+          setTipoEvidencia(tipoEvidencia);
+          setIsCameraActive(true);
+        }
       }
-    }
-  }, [permission, requestPermission, imagesList]);
+    },
+    [permission, requestPermission, imagesList],
+  );
+
+  const handleSaveDivergence = useCallback(async () => {
+    setIsLoading(true);
+
+    // try {
+
+    setIsLoading(false);
+  }, [handleBack, imagesList, supabase]);
 
   const handleSaveLaudoCrm = useCallback(async () => {
     console.log('imagesList', JSON.stringify(imagesList.length, null, 2));
@@ -335,6 +387,8 @@ export default function LaudoCrm() {
     console.log('upOrigem', JSON.stringify(upOrigem, null, 2));
     console.log('cdOrigem', JSON.stringify(cdOrigem, null, 2));
 
+    setIsLoading(true);
+
     if (
       !documentoTransporte ||
       !transportador ||
@@ -355,14 +409,92 @@ export default function LaudoCrm() {
     }
 
     if (!formPtpId) {
+      setIsLoading(false);
+
       Alert.alert('Cadastro', 'ID do Formulário PTP não foi encontrado.');
       return;
     }
 
-    setIsLoading(true);
+    if (haDivergencia === 'sim') {
+      if (!sku || !quantidade) {
+        setIsLoading(false);
+        return Alert.alert(
+          'Cadastro de Divergência',
+          'Por favor, preencha todos os campos para cadastrar o evento.',
+        );
+      }
+
+      if (divergenciaSelecionada === TipoDivergencia.INVERSAO) {
+        if (!skuNotaFiscal || !quantidadeNotaFiscal) {
+          setIsLoading(false);
+          return Alert.alert(
+            'Cadastro de Divergência',
+            'Por favor, preencha todos os campos para cadastrar o evento.',
+          );
+        }
+      }
+
+      const proximoPasso = getNextStepsByDivergencyType(
+        divergenciaSelecionada!,
+        sku,
+        quantidade,
+        skuNotaFiscal,
+        quantidadeNotaFiscal,
+      );
+
+      const data: any = {
+        tipoDivergencia: divergenciaSelecionada!,
+        evidencias: [],
+        skuFaltandoFisicamente:
+          divergenciaSelecionada === TipoDivergencia.FALTA ? sku : null,
+        qtdFaltandoFisicamente:
+          divergenciaSelecionada === TipoDivergencia.FALTA
+            ? Number(quantidade)
+            : null,
+        skuSobrandoFisicamente:
+          divergenciaSelecionada === TipoDivergencia.SOBRA ? sku : null,
+        qtdSobrandoFisicamente:
+          divergenciaSelecionada === TipoDivergencia.SOBRA
+            ? Number(quantidade)
+            : null,
+        skuRecebemosFisicamente:
+          divergenciaSelecionada === TipoDivergencia.INVERSAO ? sku : null,
+        qtdRecebemosFisicamente:
+          divergenciaSelecionada === TipoDivergencia.INVERSAO
+            ? Number(quantidade)
+            : null,
+        skuNotaFiscal:
+          divergenciaSelecionada === TipoDivergencia.INVERSAO
+            ? skuNotaFiscal
+            : null,
+        qtdNotaFiscal:
+          divergenciaSelecionada === TipoDivergencia.INVERSAO
+            ? Number(quantidadeNotaFiscal)
+            : null,
+        proximoPasso,
+        user_id: user?.id,
+      };
+
+      console.log('data divergencia', JSON.stringify(data, null, 2));
+      const response = await createDivergenceRequest(data);
+      console.log('response divergencia', JSON.stringify(response, null, 2));
+
+      if (response?.status !== 201) {
+        setIsLoading(false);
+        return Alert.alert(
+          'Ops!',
+          'Ocorreu um erro ao salvar a Divergência, tente novamente mais tarde.',
+        );
+      }
+    }
 
     console.log('lotes?.split(', ')', lotes?.split(','));
     console.log('codigoProdutos?.split(', ')', codigoProdutos?.split(','));
+    console.log(
+      'qtdCaixasNaoConformes?.split(',
+      ')',
+      qtdCaixasNaoConformes?.split(','),
+    );
 
     const data: LaudoCrmPost = {
       documentoTransporte,
@@ -374,11 +506,13 @@ export default function LaudoCrm() {
       turno: turno as Turno,
       upOrigem: upOrigem,
       cdOrigem: cdOrigem,
+      observacoes: observacoes,
       evidencias: [],
       form_ptp_id: formPtpId,
       tiposNaoConformidade: naoConformidadesList,
       lotes: lotes?.split(','),
       codigoProdutos: codigoProdutos?.split(','),
+      qtdCaixasNaoConformes: qtdCaixasNaoConformes?.split(','),
       user_id: user?.id!,
     };
 
@@ -501,14 +635,34 @@ export default function LaudoCrm() {
       }
 
       setIsLoading(false);
-      return Alert.alert('Sucesso!', 'Laudo CRM cadastrado com sucesso!', [
-        {
-          text: 'Fechar',
-          onPress: () => {
-            handleBack();
+
+      if (haDivergencia === 'sim') {
+        const proximoPasso = getNextStepsByDivergencyType(
+          divergenciaSelecionada!,
+          sku,
+          quantidade,
+          skuNotaFiscal,
+          quantidadeNotaFiscal,
+        );
+
+        return Alert.alert('Próximos Passos', proximoPasso, [
+          {
+            text: 'OK, entendi',
+            onPress: () => {
+              handleBack();
+            },
           },
-        },
-      ]);
+        ]);
+      } else {
+        return Alert.alert('Sucesso!', 'Laudo CRM cadastrado com sucesso!', [
+          {
+            text: 'Fechar',
+            onPress: () => {
+              handleBack();
+            },
+          },
+        ]);
+      }
     } else {
       Alert.alert(
         'Salvar Laudo',
@@ -533,6 +687,16 @@ export default function LaudoCrm() {
     selectedFormPtp,
     naoConformidadesList,
     formPtpId,
+    observacoes,
+    lotes,
+    codigoProdutos,
+    qtdCaixasNaoConformes,
+    divergenciaSelecionada,
+    getNextStepsByDivergencyType,
+    sku,
+    quantidade,
+    skuNotaFiscal,
+    quantidadeNotaFiscal,
     user,
     setSelectedFormPtp,
   ]);
@@ -555,13 +719,21 @@ export default function LaudoCrm() {
     );
   }, [handleBack]);
 
-  const handlePhotoLibrary = useCallback(async () => {
-    if (imagesList?.length >= 3) {
-      Alert.alert('Atenção', 'Você atingiu o limite de 3 imagens.');
-    } else {
-      await pickImageInLibrary();
-    }
-  }, [imagesList]);
+  const handlePhotoLibrary = useCallback(
+    async (tipoEvidencia: TipoEvidencia) => {
+      const imagesListFiltered = imagesList?.filter(
+        i => i?.type === tipoEvidencia,
+      );
+
+      if (imagesListFiltered?.length >= 3) {
+        Alert.alert('Atenção', 'Você atingiu o limite de 3 imagens.');
+      } else {
+        setTipoEvidencia(tipoEvidencia);
+        await pickImageInLibrary();
+      }
+    },
+    [imagesList],
+  );
 
   return isCameraActive ? (
     <View style={styles.container}>
@@ -622,6 +794,246 @@ export default function LaudoCrm() {
       )}
       <ScrollScreenContainer subtitle="LAUDO CRM">
         <VStack px={2} space={6} mb="20%" pt={2}>
+          <Box mb={1} width="100%">
+            <Text mb={3} color="gray.750">
+              Há Divergência?
+            </Text>
+
+            <Radio.Group
+              name="haDivergencia"
+              value={haDivergencia}
+              onChange={t => setHaDivergencia(t)}
+              flexDirection="row"
+              space={3}
+              alignItems={'center'}
+              width="100%"
+              style={{ gap: 10 }}
+            >
+              <RadioInput value="sim">
+                <Text>Sim</Text>
+              </RadioInput>
+              <RadioInput value="nao" ml={5}>
+                <Text>Não</Text>
+              </RadioInput>
+            </Radio.Group>
+          </Box>
+
+          {haDivergencia === 'sim' && (
+            <Text color="primary.700" fontSize="2xl" fontWeight="bold">
+              Divergência
+            </Text>
+          )}
+
+          {haDivergencia === 'sim' && (
+            <>
+              <Box mb={1}>
+                <SelectWithLabel
+                  label="Selecione o Tipo da Divergência"
+                  selectedValue={divergenciaSelecionada!}
+                  onValueChange={t =>
+                    setDivergenciaSelecionada(t as TipoDivergencia)
+                  }
+                  options={tiposDivergencia?.map(s => (
+                    <Select.Item
+                      key={s?.value}
+                      label={s?.label}
+                      value={s?.value as TipoDivergencia}
+                    />
+                  ))}
+                />
+              </Box>
+
+              {divergenciaSelecionada === TipoDivergencia.FALTA && (
+                <VStack space={6} pt={2}>
+                  <Box mb={1}>
+                    <Text mb={-2} color="gray.750">
+                      Qual SKU está faltando fisicamente?
+                    </Text>
+                    <Input
+                      w="full"
+                      variant="underlined"
+                      height={14}
+                      size="md"
+                      fontSize="md"
+                      pb={0}
+                      placeholderTextColor="gray.700"
+                      value={sku}
+                      onChangeText={t => {
+                        setSku(t);
+                      }}
+                      _focus={{ borderColor: 'primary.700' }}
+                      autoComplete="off"
+                      keyboardType="numeric"
+                    />
+                  </Box>
+                  <Box mb={1}>
+                    <Text mb={-2} color="gray.750">
+                      Qual a quantidade que está faltando fisicamente?
+                    </Text>
+                    <Input
+                      w="full"
+                      variant="underlined"
+                      height={14}
+                      size="md"
+                      fontSize="md"
+                      pb={0}
+                      placeholderTextColor="gray.700"
+                      value={quantidade}
+                      onChangeText={t => {
+                        setQuantidade(t);
+                      }}
+                      _focus={{ borderColor: 'primary.700' }}
+                      autoComplete="off"
+                      keyboardType="numeric"
+                    />
+                  </Box>
+                </VStack>
+              )}
+
+              {divergenciaSelecionada === TipoDivergencia.SOBRA && (
+                <VStack space={6} pt={2}>
+                  <Box mb={1}>
+                    <Text mb={-2} color="gray.750">
+                      Qual SKU está sobrando fisicamente?
+                    </Text>
+                    <Input
+                      w="full"
+                      variant="underlined"
+                      height={14}
+                      size="md"
+                      fontSize="md"
+                      pb={0}
+                      placeholderTextColor="gray.700"
+                      value={sku}
+                      onChangeText={t => {
+                        setSku(t);
+                      }}
+                      _focus={{ borderColor: 'primary.700' }}
+                      autoComplete="off"
+                      keyboardType="numeric"
+                    />
+                  </Box>
+                  <Box mb={1}>
+                    <Text mb={-2} color="gray.750">
+                      Qual a quantidade que está sobrando fisicamente?
+                    </Text>
+                    <Input
+                      w="full"
+                      variant="underlined"
+                      height={14}
+                      size="md"
+                      fontSize="md"
+                      pb={0}
+                      placeholderTextColor="gray.700"
+                      value={quantidade}
+                      onChangeText={t => {
+                        setQuantidade(t);
+                      }}
+                      _focus={{ borderColor: 'primary.700' }}
+                      autoComplete="off"
+                      keyboardType="numeric"
+                    />
+                  </Box>
+                </VStack>
+              )}
+
+              {divergenciaSelecionada === TipoDivergencia.INVERSAO && (
+                <VStack space={6} pt={2}>
+                  <Box mb={1}>
+                    <Text mb={-2} color="gray.750">
+                      Qual SKU recebemos fisicamente?
+                    </Text>
+                    <Input
+                      w="full"
+                      variant="underlined"
+                      height={14}
+                      size="md"
+                      fontSize="md"
+                      pb={0}
+                      placeholderTextColor="gray.700"
+                      value={sku}
+                      onChangeText={t => {
+                        setSku(t);
+                      }}
+                      _focus={{ borderColor: 'primary.700' }}
+                      autoComplete="off"
+                      keyboardType="numeric"
+                    />
+                  </Box>
+                  <Box mb={1}>
+                    <Text mb={-2} color="gray.750">
+                      Qual a quantidade que recebemos fisicamente?
+                    </Text>
+                    <Input
+                      w="full"
+                      variant="underlined"
+                      height={14}
+                      size="md"
+                      fontSize="md"
+                      pb={0}
+                      placeholderTextColor="gray.700"
+                      value={quantidade}
+                      onChangeText={t => {
+                        setQuantidade(t);
+                      }}
+                      _focus={{ borderColor: 'primary.700' }}
+                      autoComplete="off"
+                      keyboardType="numeric"
+                    />
+                  </Box>
+                  <Box mb={1}>
+                    <Text mb={-2} color="gray.750">
+                      Qual SKU está na nota fiscal?
+                    </Text>
+                    <Input
+                      w="full"
+                      variant="underlined"
+                      height={14}
+                      size="md"
+                      fontSize="md"
+                      pb={0}
+                      placeholderTextColor="gray.700"
+                      value={skuNotaFiscal}
+                      onChangeText={t => {
+                        setSkuNotaFiscal(t);
+                      }}
+                      _focus={{ borderColor: 'primary.700' }}
+                      autoComplete="off"
+                      keyboardType="numeric"
+                    />
+                  </Box>
+                  <Box mb={1}>
+                    <Text mb={-2} color="gray.750">
+                      Qual a quantidade que está na nota fiscal?
+                    </Text>
+                    <Input
+                      w="full"
+                      variant="underlined"
+                      height={14}
+                      size="md"
+                      fontSize="md"
+                      pb={0}
+                      placeholderTextColor="gray.700"
+                      value={quantidadeNotaFiscal}
+                      onChangeText={t => {
+                        setQuantidadeNotaFiscal(t);
+                      }}
+                      _focus={{ borderColor: 'primary.700' }}
+                      autoComplete="off"
+                      keyboardType="numeric"
+                    />
+                  </Box>
+                </VStack>
+              )}
+            </>
+          )}
+
+          {haDivergencia === 'sim' && (
+            <Text color="primary.700" fontSize="2xl" fontWeight="bold">
+              Laudo CRM
+            </Text>
+          )}
+
           <Box mb={1}>
             <Text mb={-2} color="gray.750">
               Documento de Transporte:
@@ -640,6 +1052,7 @@ export default function LaudoCrm() {
               }}
               _focus={{ borderColor: 'primary.700' }}
               autoComplete="off"
+              keyboardType="numeric"
             />
           </Box>
 
@@ -678,8 +1091,9 @@ export default function LaudoCrm() {
               placeholderTextColor="gray.700"
               value={placa}
               onChangeText={t => {
-                setPlaca(t);
+                setPlaca(mask(t, '999-9999'));
               }}
+              maxLength={8}
               _focus={{ borderColor: 'primary.700' }}
               placeholder="000-0000"
               autoComplete="off"
@@ -749,6 +1163,31 @@ export default function LaudoCrm() {
               pb={0}
               placeholderTextColor="gray.700"
               value={codigoProdutos}
+              isDisabled
+              _disabled={{
+                color: 'gray.900',
+                opacity: 1,
+                borderColor: 'gray.700',
+              }}
+              _focus={{ borderColor: 'primary.700' }}
+              autoComplete="off"
+              multiline
+            />
+          </Box>
+
+          <Box mb={1}>
+            <Text mb={-2} color="gray.750">
+              Qtd Caixas Analisadas:
+            </Text>
+            <Input
+              w="full"
+              variant="underlined"
+              height={14}
+              size="md"
+              fontSize="md"
+              pb={0}
+              placeholderTextColor="gray.700"
+              value={qtdCaixasNaoConformes}
               isDisabled
               _disabled={{
                 color: 'gray.900',
@@ -865,7 +1304,8 @@ export default function LaudoCrm() {
           <SelectWithLabel
             label="UP Origem"
             selectedValue={upOrigem}
-            onValueChange={setUpOrigem}
+            // onValueChange={setUpOrigem}
+            isDisabled
             options={listaUPsOrigem?.map(s => (
               <Select.Item key={s?.value} label={s?.label} value={s?.value} />
             ))}
@@ -880,51 +1320,74 @@ export default function LaudoCrm() {
             ))}
           />
 
+          <Box mb={1}>
+            <Text mb={-2} color="gray.750">
+              Observações Gerais:
+            </Text>
+            <Input
+              w="full"
+              variant="underlined"
+              height={14}
+              size="md"
+              fontSize="md"
+              pb={0}
+              placeholderTextColor="gray.700"
+              value={observacoes}
+              onChangeText={setObservacoes}
+              _focus={{ borderColor: 'primary.700' }}
+              autoComplete="off"
+              multiline
+              maxLength={1000}
+            />
+          </Box>
+
           <VStack>
             <Text color="gray.750" mb={4}>
-              Evidência(s)
+              Evidência(s) UC
             </Text>
 
             {imagesList && imagesList?.length > 0 && (
               <VStack mt={1} mb={3}>
-                {imagesList?.map((image, index) => (
-                  <HStack
-                    key={index}
-                    space={2}
-                    mb={4}
-                    w="full"
-                    justifyContent="space-between"
-                    alignItems="center"
-                  >
-                    <HStack space={2} alignItems="center">
-                      <Image
-                        key={index}
-                        source={{ uri: image.uri }}
-                        alt="image"
-                        size="sm"
-                        width="80px"
-                        height="30px"
-                      />
-
-                      <Text>{index}</Text>
-                    </HStack>
-                    <Pressable
-                      onPress={() => {
-                        const newImagesList = imagesList?.filter(
-                          (_, idx) => idx !== index,
-                        );
-
-                        setImagesList(newImagesList);
-                      }}
+                {imagesList
+                  ?.filter(img => img?.type === TipoEvidencia.UC)
+                  ?.map((image, index) => (
+                    <HStack
+                      key={index}
+                      space={2}
+                      mb={4}
+                      w="full"
+                      justifyContent="space-between"
+                      alignItems="center"
                     >
-                      <MaterialIcons
-                        name="delete"
-                        color={colors.secondary[700]}
-                        size={24}
-                      />
-                    </Pressable>
-                  </HStack>
-                ))}
+                      <HStack space={2} alignItems="center">
+                        <Image
+                          key={index}
+                          source={{ uri: image?.uri }}
+                          alt="image"
+                          size="sm"
+                          width="80px"
+                          height="30px"
+                        />
+
+                        <Text>{index}</Text>
+                      </HStack>
+                      <Pressable
+                        onPress={() => {
+                          const newImagesList = imagesList?.filter(
+                            (_, idx) => idx !== index,
+                          );
+
+                          setImagesList(newImagesList);
+                        }}
+                      >
+                        <MaterialIcons
+                          name="delete"
+                          color={colors.secondary[700]}
+                          size={24}
+                        />
+                      </Pressable>
+                    </HStack>
+                  ))}
               </VStack>
             )}
 
@@ -934,7 +1397,7 @@ export default function LaudoCrm() {
               mb="24px"
               space={5}
             >
-              <Pressable onPress={handlePhotoLibrary}>
+              <Pressable onPress={() => handlePhotoLibrary(TipoEvidencia.UC)}>
                 <MaterialIcons
                   name="photo"
                   color={colors.gray[800]}
@@ -943,7 +1406,244 @@ export default function LaudoCrm() {
               </Pressable>
               <Pressable
                 onPress={() => {
-                  handleCamera();
+                  handleCamera(TipoEvidencia.UC);
+                }}
+              >
+                <MaterialCommunityIcons
+                  name="camera"
+                  color={colors.gray[800]}
+                  size={28}
+                />
+              </Pressable>
+            </HStack>
+          </VStack>
+
+          <VStack>
+            <Text color="gray.750" mb={4}>
+              Evidência(s) Etiqueta Caixa
+            </Text>
+
+            {imagesList && imagesList?.length > 0 && (
+              <VStack mt={1} mb={3}>
+                {imagesList
+                  ?.filter(img => img?.type === TipoEvidencia.ETIQUETA_CAIXA)
+                  ?.map((image, index) => (
+                    <HStack
+                      key={index}
+                      space={2}
+                      mb={4}
+                      w="full"
+                      justifyContent="space-between"
+                      alignItems="center"
+                    >
+                      <HStack space={2} alignItems="center">
+                        <Image
+                          key={index}
+                          source={{ uri: image.uri }}
+                          alt="image"
+                          size="sm"
+                          width="80px"
+                          height="30px"
+                        />
+
+                        <Text>{index}</Text>
+                      </HStack>
+                      <Pressable
+                        onPress={() => {
+                          const newImagesList = imagesList?.filter(
+                            (_, idx) => idx !== index,
+                          );
+
+                          setImagesList(newImagesList);
+                        }}
+                      >
+                        <MaterialIcons
+                          name="delete"
+                          color={colors.secondary[700]}
+                          size={24}
+                        />
+                      </Pressable>
+                    </HStack>
+                  ))}
+              </VStack>
+            )}
+
+            <HStack
+              alignItems="center"
+              justifyContent="flex-start"
+              mb="24px"
+              space={5}
+            >
+              <Pressable
+                onPress={() => handlePhotoLibrary(TipoEvidencia.ETIQUETA_CAIXA)}
+              >
+                <MaterialIcons
+                  name="photo"
+                  color={colors.gray[800]}
+                  size={28}
+                />
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  handleCamera(TipoEvidencia.ETIQUETA_CAIXA);
+                }}
+              >
+                <MaterialCommunityIcons
+                  name="camera"
+                  color={colors.gray[800]}
+                  size={28}
+                />
+              </Pressable>
+            </HStack>
+          </VStack>
+
+          <VStack>
+            <Text color="gray.750" mb={4}>
+              Evidência(s) Avarias
+            </Text>
+
+            {imagesList && imagesList?.length > 0 && (
+              <VStack mt={1} mb={3}>
+                {imagesList
+                  ?.filter(img => img?.type === TipoEvidencia.AVARIAS)
+                  ?.map((image, index) => (
+                    <HStack
+                      key={index}
+                      space={2}
+                      mb={4}
+                      w="full"
+                      justifyContent="space-between"
+                      alignItems="center"
+                    >
+                      <HStack space={2} alignItems="center">
+                        <Image
+                          key={index}
+                          source={{ uri: image.uri }}
+                          alt="image"
+                          size="sm"
+                          width="80px"
+                          height="30px"
+                        />
+
+                        <Text>{index}</Text>
+                      </HStack>
+                      <Pressable
+                        onPress={() => {
+                          const newImagesList = imagesList?.filter(
+                            (_, idx) => idx !== index,
+                          );
+
+                          setImagesList(newImagesList);
+                        }}
+                      >
+                        <MaterialIcons
+                          name="delete"
+                          color={colors.secondary[700]}
+                          size={24}
+                        />
+                      </Pressable>
+                    </HStack>
+                  ))}
+              </VStack>
+            )}
+
+            <HStack
+              alignItems="center"
+              justifyContent="flex-start"
+              mb="24px"
+              space={5}
+            >
+              <Pressable
+                onPress={() => handlePhotoLibrary(TipoEvidencia.AVARIAS)}
+              >
+                <MaterialIcons
+                  name="photo"
+                  color={colors.gray[800]}
+                  size={28}
+                />
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  handleCamera(TipoEvidencia.AVARIAS);
+                }}
+              >
+                <MaterialCommunityIcons
+                  name="camera"
+                  color={colors.gray[800]}
+                  size={28}
+                />
+              </Pressable>
+            </HStack>
+          </VStack>
+
+          <VStack>
+            <Text color="gray.750" mb={4}>
+              Evidência(s) Pallets
+            </Text>
+
+            {imagesList && imagesList?.length > 0 && (
+              <VStack mt={1} mb={3}>
+                {imagesList
+                  ?.filter(img => img?.type === TipoEvidencia.PALLETS)
+                  ?.map((image, index) => (
+                    <HStack
+                      key={index}
+                      space={2}
+                      mb={4}
+                      w="full"
+                      justifyContent="space-between"
+                      alignItems="center"
+                    >
+                      <HStack space={2} alignItems="center">
+                        <Image
+                          key={index}
+                          source={{ uri: image.uri }}
+                          alt="image"
+                          size="sm"
+                          width="80px"
+                          height="30px"
+                        />
+
+                        <Text>{index}</Text>
+                      </HStack>
+                      <Pressable
+                        onPress={() => {
+                          const newImagesList = imagesList?.filter(
+                            (_, idx) => idx !== index,
+                          );
+
+                          setImagesList(newImagesList);
+                        }}
+                      >
+                        <MaterialIcons
+                          name="delete"
+                          color={colors.secondary[700]}
+                          size={24}
+                        />
+                      </Pressable>
+                    </HStack>
+                  ))}
+              </VStack>
+            )}
+
+            <HStack
+              alignItems="center"
+              justifyContent="flex-start"
+              mb="24px"
+              space={5}
+            >
+              <Pressable
+                onPress={() => handlePhotoLibrary(TipoEvidencia.PALLETS)}
+              >
+                <MaterialIcons
+                  name="photo"
+                  color={colors.gray[800]}
+                  size={28}
+                />
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  handleCamera(TipoEvidencia.PALLETS);
                 }}
               >
                 <MaterialCommunityIcons

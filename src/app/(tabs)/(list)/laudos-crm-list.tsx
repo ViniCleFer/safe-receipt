@@ -32,33 +32,34 @@ export default function LuadoCrmList() {
 
         if (response?.data?.length > 0) {
           for await (const laudoCrm of response?.data as any[]) {
-            const evidencias = laudoCrm?.evidencias;
+            // const evidencias = laudoCrm?.evidencias;
 
-            let urlsEvidencias: any[] = [];
+            // let urlsEvidencias: any[] = [];
 
-            if (evidencias?.length === 0) {
-              urlsEvidencias = [];
-            } else {
-              for await (const evidenciaId of evidencias) {
-                const { data } = supabase.storage
-                  .from('evidencias')
-                  .getPublicUrl(`laudoCrm/${laudoCrm?.id}/${evidenciaId}`);
+            // if (evidencias?.length === 0) {
+            //   urlsEvidencias = [];
+            // } else {
+            //   for await (const evidenciaId of evidencias) {
+            //     const { data } = supabase.storage
+            //       .from('evidencias')
+            //       .getPublicUrl(`laudoCrm/${laudoCrm?.id}/${evidenciaId}`);
 
-                const evidencia = data?.publicUrl;
+            //     const evidencia = data?.publicUrl;
 
-                if (evidencia) {
-                  urlsEvidencias = [...urlsEvidencias, evidencia];
-                } else {
-                  urlsEvidencias = [...urlsEvidencias];
-                }
-              }
-            }
+            //     if (evidencia) {
+            //       urlsEvidencias = [...urlsEvidencias, evidencia];
+            //     } else {
+            //       urlsEvidencias = [...urlsEvidencias];
+            //     }
+            //   }
+            // }
 
             laudosCrm = [
               ...laudosCrm,
               {
                 ...laudoCrm,
-                evidencias: [...urlsEvidencias],
+                evidencias: [],
+                // evidencias: [...urlsEvidencias],
               },
             ];
           }
@@ -238,7 +239,7 @@ export default function LuadoCrmList() {
                     {item?.codigosProdutos}
                   </Text>
                 </VStack>
-                <VStack pl={2} mb={4} width="100%">
+                {/* <VStack pl={2} mb={4} width="100%">
                   <Text color="gray.750">Evidências</Text>
                   {item?.evidencias?.length > 0 ? (
                     item?.evidencias?.map((item: any, index: number) => (
@@ -256,7 +257,7 @@ export default function LuadoCrmList() {
                       Sem evidências
                     </Text>
                   )}
-                </VStack>
+                </VStack> */}
               </Card>
             ))
           ) : (

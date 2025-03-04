@@ -1,7 +1,7 @@
+import { useState } from 'react';
 import { Checkbox, Text, View } from 'native-base';
 import { tiposNaoConformidade } from '@/utils/tiposNaoConformidade';
 import { Control, Controller } from 'react-hook-form';
-import { useState } from 'react';
 
 interface ConformidadesCheckboxControlledProps {
   label: string;
@@ -9,6 +9,8 @@ interface ConformidadesCheckboxControlledProps {
   control: Control<any>;
   index: number;
   name: string;
+  optionNaoConformidadesList: string[];
+  isChecked?: boolean;
 }
 
 export const ConformidadesCheckboxControlled = ({
@@ -17,6 +19,8 @@ export const ConformidadesCheckboxControlled = ({
   control,
   index,
   name,
+  optionNaoConformidadesList,
+  isChecked = false,
 }: ConformidadesCheckboxControlledProps) => {
   // const handleCheckbox = (
   //   naoConformidade: string,
@@ -67,39 +71,45 @@ export const ConformidadesCheckboxControlled = ({
         {label}
       </Text>
 
-      {tiposNaoConformidade?.map((item: any) => (
-        <View key={item?.value} mb={4}>
-          <Controller
-            control={control}
-            name={`respostas.${index}.${name}`}
-            render={({ field }) => (
-              <Checkbox
-                value={field?.value}
-                isChecked={
-                  isOnlyView ? selectedItems?.includes(item?.value) : undefined
-                }
-                _text={{
-                  color: 'gray.750',
-                }}
-                onChange={() => {
-                  handleCheckboxChange(item?.value, field.onChange);
-                  // field.onChange(selectedItems);
-                }}
-                isDisabled={isOnlyView}
-                _checked={{
-                  backgroundColor: 'primary.700',
-                  borderColor: 'primary.700',
-                }}
-                _disabled={{
-                  opacity: 1,
-                }}
-              >
-                {item?.label}
-              </Checkbox>
-            )}
-          />
-        </View>
-      ))}
+      {tiposNaoConformidade
+        ?.filter(tipo => optionNaoConformidadesList?.includes(tipo?.value))
+        ?.map((item: any) => (
+          <View key={item?.value} mb={4}>
+            <Controller
+              control={control}
+              name={`respostas.${index}.${name}`}
+              render={({ field }) => (
+                <Checkbox
+                  value={field?.value}
+                  isChecked={
+                    isChecked
+                      ? true
+                      : isOnlyView
+                      ? selectedItems?.includes(item?.value)
+                      : undefined
+                  }
+                  _text={{
+                    color: 'gray.750',
+                  }}
+                  onChange={() => {
+                    handleCheckboxChange(item?.value, field.onChange);
+                    // field.onChange(selectedItems);
+                  }}
+                  isDisabled={isChecked ? true : isOnlyView}
+                  _checked={{
+                    backgroundColor: 'primary.700',
+                    borderColor: 'primary.700',
+                  }}
+                  _disabled={{
+                    opacity: 1,
+                  }}
+                >
+                  {item?.label}
+                </Checkbox>
+              )}
+            />
+          </View>
+        ))}
     </View>
   );
 };

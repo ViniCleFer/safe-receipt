@@ -3,12 +3,19 @@ export enum FormPtpStatus {
   FINALIZADO = 'FINALIZADO',
 }
 
+export enum TipoCodigoProduto {
+  MISTO = 'MISTO',
+  EXCLUSIVO = 'EXCLUSIVO',
+}
+
 export interface FormPtp {
   id: string;
   dataExecucao: Date;
   conferente: string;
   notaFiscal: string;
   opcaoUp: string;
+  qtdAnalisada: number;
+  tipoCodigoProduto: TipoCodigoProduto;
   status: FormPtpStatus;
   created_at: Date;
   updated_at: Date;
@@ -21,6 +28,8 @@ export interface FormPtpPost {
   notaFiscal: string;
   opcaoUp: string;
   status: FormPtpStatus;
+  qtdAnalisada: number;
+  tipoCodigoProduto: TipoCodigoProduto;
 }
 
 export interface FormPtpPut extends FormPtpPost {
@@ -30,5 +39,6 @@ export interface FormPtpPut extends FormPtpPost {
 export interface FormPtpToLaudoCrm extends FormPtp {
   lotes?: string[] | null;
   codigoProdutos?: string[] | null;
+  qtdCaixasNaoConformes?: string[] | null;
   detalheNaoConformidade: string[];
 }

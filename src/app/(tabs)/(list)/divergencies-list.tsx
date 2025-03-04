@@ -1,6 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import dayjs from 'dayjs';
-import { Circle, HStack, Text, useTheme, View, VStack } from 'native-base';
+import { Box, Circle, HStack, Text, useTheme, View, VStack } from 'native-base';
 import React, { useCallback, useState } from 'react';
 import { Image } from 'expo-image';
 import { useFocusEffect } from 'expo-router';
@@ -202,16 +202,18 @@ export default function DivergenciesList() {
                 <VStack pl={2} mb={4} width="100%">
                   <Text color="gray.750">Evidências</Text>
                   {item?.evidencias?.length > 0 ? (
-                    item?.evidencias?.map((item: any, index) => (
-                      <Image
-                        key={index}
-                        source={{ uri: item }}
-                        alt="image"
-                        contentFit="fill"
-                        transition={1000}
-                        style={{ width: 80, height: 60 }}
-                      />
-                    ))
+                    <Box style={{ gap: 8 }}>
+                      {item?.evidencias?.map((item: any, index) => (
+                        <Image
+                          key={index}
+                          source={{ uri: item }}
+                          alt="image"
+                          contentFit="fill"
+                          transition={1000}
+                          style={{ width: 80, height: 80 }}
+                        />
+                      ))}
+                    </Box>
                   ) : (
                     <Text color="black" fontWeight="semibold">
                       Sem evidências

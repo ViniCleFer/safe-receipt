@@ -10,6 +10,7 @@ type InputProps = IInputProps & {
   control: Control<any>;
   index: number;
   name: string;
+  maxLength?: number;
 };
 
 export function InputWithLabelControlled({
@@ -18,6 +19,7 @@ export function InputWithLabelControlled({
   control,
   index,
   name,
+  maxLength = 100,
   ...rest
 }: InputProps) {
   const { colors } = useTheme();
@@ -36,12 +38,12 @@ export function InputWithLabelControlled({
             onChangeText={field.onChange}
             w="full"
             variant="underlined"
-            height={14}
+            minHeight={14}
             size="md"
             fontSize="md"
             pb={0}
             placeholderTextColor="gray.700"
-            maxLength={10}
+            maxLength={maxLength}
             _focus={{ borderColor: 'primary.700' }}
             autoComplete="off"
             {...rest}

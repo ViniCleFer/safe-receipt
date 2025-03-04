@@ -1,10 +1,18 @@
 import { FormPtpAnswer } from '../form-ptp-answers/types';
 
+export enum TipoEvidencia {
+  UC = 'UC',
+  ETIQUETA_CAIXA = 'ETIQUETA_CAIXA',
+  AVARIAS = 'AVARIAS',
+  PALLETS = 'PALLETS',
+}
+
 export enum Turno {
   T1 = 'T1',
   T2 = 'T2',
   T3 = 'T3',
 }
+
 export enum TipoNaoConformidade {
   PALLET_COM_AVARIA = 'PALLET_COM_AVARIA',
   PALLET_COM_DIVERGENCIA_DE_LOTE = 'PALLET_COM_DIVERGENCIA_DE_LOTE',
@@ -49,6 +57,7 @@ export interface LaudoCrm {
   upOrigem: string;
   cdOrigem: string;
   tiposNaoConformidade: TipoNaoConformidade[];
+  observacoes: string;
   evidencias: string[];
   created_at: Date;
   updated_at: Date;
@@ -58,6 +67,7 @@ export interface LaudoCrm {
 export interface LaudoCrmWithAnswer extends LaudoCrm, FormPtpAnswer {
   lotes: string[];
   codigosProdutos: string[];
+  qtdCaixasNaoConformes: string[];
 }
 
 export interface LaudoCrmPost {
@@ -73,8 +83,10 @@ export interface LaudoCrmPost {
   tiposNaoConformidade: TipoNaoConformidade[];
   evidencias: EvidenciaPost[];
   form_ptp_id: string;
+  observacoes: string;
   lotes: string[];
   codigoProdutos: string[];
+  qtdCaixasNaoConformes: string[];
   user_id: string;
 }
 

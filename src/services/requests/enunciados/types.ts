@@ -9,6 +9,8 @@ export interface Enunciado {
   posicao: number;
   ativo: boolean;
   grupo: GrupoEnunciado;
+  isChecked: boolean;
+  opcoesNaoConformidades: string[];
   created_at: Date;
   updated_at: Date;
   canceled_at: Date | null;

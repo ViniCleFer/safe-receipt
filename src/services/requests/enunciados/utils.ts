@@ -34,8 +34,9 @@ export async function getEnunciadosRequest(
   const { data, error } = await supabase
     .from('enunciados')
     .select()
-    .eq('ativo', 'true');
-
+    .eq('ativo', 'true')
+    .order('grupo', { ascending: false })
+    .order('posicao', { ascending: true });
   if (error) {
     console.error('Error createFormPtpRequest', JSON.stringify(error, null, 2));
     console.error('Error createFormPtpRequest', JSON.stringify(data, null, 2));

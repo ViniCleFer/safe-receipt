@@ -6,50 +6,50 @@ LN02 - Lonado
 
 ### Formulário PTP
 
-[ ] Adicionar um campo Tipo do Código Produto de Radio com as opções Misto ou Exclusivo
-Se Exclusivo = É preciso digitar o "Código Produto" uma vez e ele preenche para todos as respostas
+[X] Adicionar um campo Tipo do Código Produto de Radio com as opções Misto ou Exclusivo
+[X] Se Exclusivo = É preciso digitar o "Código Produto" uma vez e ele preenche para todos as respostas
 Se Misto = Se é misto deixar o "Código Produto" em branco
+[X] O campo "Quantidade Analisada" não precisa aparecer em todos os enunciados, apenas no ínicio das Respostas (Movido para o Form PTP)
 
 ### Respostas do PTP
 
-[ ] O campo "Quantidade Analisada" não precisa aparecer em todos os enunciados, apenas no ínicio das Respostas
-[ ] Em cada enunciado quando o campo "Há não conformidade" for "não" precisa ocultar os campos "Qtde Palletes Não Conforme" e "Qtde Caixas Não Conforme"
-[ ] O campo "Código de Produto" precisa ser um array (Mais de um código de produto por Resposta) vai depender se é exclusivo ou misto
-[ ] O campo lote precisa ser um array
-[ ] O campo "Qtde Caixas Não Conforme" pode ser aberto e precisa ser teclado numérico igual SKU de Cadastro de Divergência
-[ ] O campo "Lote" precisa ser teclado numérico igual SKU de Cadastro de Divergência
-[ ] Campo "Código Produto" precisa ser teclado numérico igual SKU de Cadastro de Divergência (Tentar manter XX.XXXXXXXX sempre 2 dígitos e um ponto (.))
+[X] Em cada enunciado quando o campo "Há não conformidade" for "não" precisa ocultar os campos "Qtde Palletes Não Conforme" e "Qtde Caixas Não Conforme"
+[X] O campo lote precisa ser um array (Deixei string)
+[X] O campo "Lote" precisa ser teclado numérico igual SKU de Cadastro de Divergência
+[X] O campo "Qtde Caixas Não Conforme" pode ser aberto e precisa ser teclado numérico igual SKU de Cadastro de Divergência
+[X] O campo "Código de Produto" precisa ser um array (Mais de um código de produto por Resposta) vai depender se é exclusivo ou misto
+[X] Campo "Código Produto" precisa ser teclado numérico igual SKU de Cadastro de Divergência (Tentar manter XX.XXXXXX sempre 2 dígitos e um ponto (.) e mais 6 no final)
 
 Opções de Não Conformidade precisa vir de acordo com as questões
 
 ### Enunciados PALETE
 
-[ ] Item 1) Palete com falta - precisa vir checkado - sem as outras opções
-[ ] Item 2) Palete Desalinhado, Palete Tombado - precisa vir desmarcado - sem as outras opções
+[X] Item 1) Palete com falta - precisa vir checkado - sem as outras opções
+[X] Item 2) Palete Desalinhado, Palete Tombado - precisa vir desmarcado - sem as outras opções
 [X] Item 3) Excluir o Enunciado 3
-[ ] Item 4) Palete quebrado - precisa vir checkado - sem as outras opções
-[ ] Item 5) Palete com strech rasgado, Pallet sem strech no pé - precisa vir desmarcado - sem as outras opções
+[X] Item 4) é o novo 3) Palete quebrado - precisa vir checkado - sem as outras opções
+[X] Item 5) é o novo 4) Palete com strech rasgado, Pallet sem strech no pé - precisa vir desmarcado - sem as outras opções
 [X] Item 6) Excluir o Enunciado 6
-[ ] Item 7) Remover as opções de Não Conformidade e Remover "Quantidade de caixas não conforme"
+[X] Item 7) é o novo 5) Remover as opções de Não Conformidade e Remover "Quantidade de caixas não conforme"
 
 ### Enunciados CAIXA E FARDO
 
-[ ] Item 1) Palete Sujidade, Palete Avaria - precisa vir desmarcado - sem as outras opções
-[ ] Item 2) Palete com avaria - precisa vir checkado - sem as outras opções
-[ ] Item 3) CAIXA SEM ETIQUETA (Precisa criar essa opção no Banco) - precisa vir checkado - sem as outras opções
-[ ] Item 4) CAIXA COM MAIS DE UMA ETIQUETA (Precisa criar essa opção no Banco) - precisa vir checkado - sem as outras opções
-[ ] Item 5) ETIQUETA NÃO EQUIVALE AO PRODUTO (Precisa criar essa opção no Banco) - precisa vir checkado - sem as outras opções
-[ ] Item 6) PRODUTO EM SHELF LIFE (Precisa criar essa opção no Banco) - precisa vir checkado - sem as outras opções
+[X] Item 1) Palete Sujidade, Palete Avaria - precisa vir desmarcado - sem as outras opções
+[X] Item 2) Palete com avaria - precisa vir checkado - sem as outras opções
+[X] Item 3) CAIXA SEM ETIQUETA (Precisa criar essa opção no Banco) - precisa vir checkado - sem as outras opções
+[X] Item 4) CAIXA COM MAIS DE UMA ETIQUETA (Precisa criar essa opção no Banco) - precisa vir checkado - sem as outras opções
+[X] Item 5) ETIQUETA NÃO EQUIVALE AO PRODUTO (Precisa criar essa opção no Banco) - precisa vir checkado - sem as outras opções
+[X] Item 6) PRODUTO EM SHELF LIFE (Precisa criar essa opção no Banco) - precisa vir checkado - sem as outras opções
 
 ### Laudo
 
-[ ] No ínicio do Laudo perguntar Se há Divergência (Se "Não", só finalizar, se "Sim" escolher uma das 3 opções e mostrar o formulário de acordo com a divergência escolhida sem a opção de anexar Evidencias)
-[ ] Trazer a quantidade de caixas igual o lote, ser um array separado por vírgula
-[ ] O campo "Documento de Transporte" pode ser aberto e precisa ser teclado numérico igual SKU de Cadastro de Divergência
-[ ] Campo "Placa" tentar manter XXX-XXXX sempre 3 dígitos e um hifen (-) e depois mais 4 caracteres
-[ ] Trazer a UP de Origem do Formulário PTP
-[ ] Validar se dá para serpara as Evidencias em 4 opções (UC / Etiqueta Caixa / Avarias / Palletes) manter a funcionalidade como está limitando por 3 fotos de cada
-[ ] Adicionar um campo livre "Obervações Gerais" limite de 1000 caracteres depois das anomalias encontradas
+[X] No ínicio do Laudo perguntar Se há Divergência (Se "Não", só finalizar, se "Sim" escolher uma das 3 opções e mostrar o formulário de acordo com a divergência escolhida sem a opção de anexar Evidencias)
+[X] Trazer a quantidade de caixas não conforme igual o lote, ser um array separado por vírgula
+[X] O campo "Documento de Transporte" pode ser aberto e precisa ser teclado numérico igual SKU de Cadastro de Divergência
+[X] Campo "Placa" tentar manter XXX-XXXX sempre 3 dígitos e um hifen (-) e depois mais 4 caracteres
+[X] Trazer a UP de Origem do Formulário PTP
+[X] Validar se dá para serpara as Evidencias em 4 opções (UC / Etiqueta Caixa / Avarias / Palletes) manter a funcionalidade como está limitando por 3 fotos de cada
+[X] Adicionar um campo livre "Obervações Gerais" limite de 1000 caracteres depois das anomalias encontradas
 
 ### Evidências
 
