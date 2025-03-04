@@ -1122,6 +1122,7 @@ export default function LaudoCrm() {
               }}
               _focus={{ borderColor: 'primary.700' }}
               autoComplete="off"
+              keyboardType="numeric"
             />
           </Box>
 

@@ -3,6 +3,7 @@ import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker, {
   type DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
+import { StackActions } from '@react-navigation/native';
 import {
   Box,
   HStack,
@@ -19,7 +20,7 @@ import * as z from 'zod';
 import dayjs from 'dayjs';
 import { shade } from 'polished';
 import { Alert } from 'react-native';
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useNavigationContainerRef } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { mask } from 'remask';
@@ -72,6 +73,7 @@ const formAnswersSchema = z.object({
 export default function FormPtp() {
   const { colors } = useTheme();
   const { back, push, replace } = router;
+  const rootNavigation = useNavigationContainerRef();
 
   const { selectedFormPtp, setSelectedFormPtp } = useFormPtpStore(
     state => state,
@@ -82,8 +84,8 @@ export default function FormPtp() {
 
   const [dataIdentificacao, setDataIdentificacao] = useState(new Date());
   const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
-  const [conferente, setConferente] = useState('Teste');
-  const [nota, setNota] = useState('1234234');
+  const [conferente, setConferente] = useState('');
+  const [nota, setNota] = useState('');
   const [up, setUp] = useState('');
   const [codProduto, setCodProduto] = useState('');
   const [qtdAnalisada, setQtdAnalisada] = useState('');
@@ -166,22 +168,30 @@ export default function FormPtp() {
     setIsDatePickerVisible(false);
   };
 
-  const handleBack = useCallback(() => {
-    back();
-
+  const handleClear = useCallback(() => {
     setConferente('');
     setNota('');
     setUp('');
     setDataIdentificacao(new Date());
+    setQtdAnalisada('');
+    setCodProduto('');
+    setTipoCodigoProduto(TipoCodigoProduto.EXCLUSIVO);
     setIsDatePickerVisible(false);
 
     setSelectedFormPtp(null);
-  }, [back, setSelectedFormPtp]);
+    setShowEnunciados(false);
+    setValue('respostas', []);
+  }, [setSelectedFormPtp, setValue]);
+
+  const handleBack = useCallback(() => {
+    back();
+    handleClear();
+  }, [back, handleClear]);
 
   const handleSaveInitialFormPtp = useCallback(async () => {
     setIsLoading(true);
 
-    if (!dataIdentificacao || !conferente || !nota || !up) {
+    if (!dataIdentificacao || !conferente || !nota || !up || !qtdAnalisada) {
       Alert.alert(
         'Salvar PTP',
         'Por favor, preencha todos os campos para responder as perguntas.',
@@ -234,6 +244,9 @@ export default function FormPtp() {
     const itensProcessados: any[] = [];
     setIsLoading(true);
 
+    console.log('tipoCodigoProduto', tipoCodigoProduto);
+    console.log('codProduto', codProduto);
+
     if (tipoCodigoProduto === TipoCodigoProduto.EXCLUSIVO && !codProduto) {
       Alert.alert(
         'Salvar Respostas PTP',
@@ -263,8 +276,12 @@ export default function FormPtp() {
             ? resposta?.detalheNaoConformidade
             : [],
           lote: haNaoConformidade ? resposta?.lote : null,
-          qtdPalletsNaoConforme: Number(resposta?.qtdPalletsNaoConforme),
-          qtdCaixasNaoConforme: Number(resposta?.qtdCaixasNaoConforme),
+          qtdPalletsNaoConforme: haNaoConformidade
+            ? Number(resposta?.qtdPalletsNaoConforme)
+            : 0,
+          qtdCaixasNaoConforme: haNaoConformidade
+            ? Number(resposta?.qtdCaixasNaoConforme)
+            : 0,
           necessitaCrm: haNaoConformidade,
         };
 
@@ -290,6 +307,7 @@ export default function FormPtp() {
           itensProcessados.push({
             ...resposta,
             status: 'Erro',
+            data,
           });
         }
       }
@@ -340,7 +358,10 @@ export default function FormPtp() {
             [
               {
                 text: 'Fechar',
-                onPress: () => push(`/laudo-crm/${selectedFormPtp?.id}`),
+                onPress: () => {
+                  handleClear();
+                  push(`/laudo-crm/${selectedFormPtp?.id}`);
+                },
               },
             ],
           );
@@ -351,7 +372,11 @@ export default function FormPtp() {
             [
               {
                 text: 'Fechar',
-                onPress: () => replace('/(tabs)/(list)'),
+                onPress: () => {
+                  handleClear();
+                  rootNavigation.dispatch(StackActions.popToTop());
+                  replace('/(tabs)/(list)');
+                },
               },
             ],
           );
@@ -363,7 +388,7 @@ export default function FormPtp() {
           ${respostaErro?.length > 1 ? 'Itens com erro' : 'Item com erro'}\n
           ${
             respostaErro?.length > 1
-              ? respostaErro?.map(item => item.enunciado_id).join(', ')
+              ? respostaErro?.map(item => item?.enunciado_id).join(', ')
               : respostaErro?.[0]?.enunciado_id
           }
         `,
@@ -375,7 +400,17 @@ export default function FormPtp() {
     } finally {
       setIsLoading(false);
     }
-  }, [push, replace, getValues, setSelectedFormPtp, selectedFormPtp?.id]);
+  }, [
+    push,
+    replace,
+    getValues,
+    setSelectedFormPtp,
+    selectedFormPtp?.id,
+    tipoCodigoProduto,
+    codProduto,
+    handleClear,
+    rootNavigation,
+  ]);
 
   const respostas = watch('respostas');
 
@@ -498,6 +533,7 @@ export default function FormPtp() {
               placeholder=""
               isDisabled={showEnunciados}
               autoComplete="off"
+              keyboardType="numeric"
             />
           </Box>
 
@@ -541,18 +577,15 @@ export default function FormPtp() {
               isDisabled={showEnunciados}
             >
               <RadioInput
-                // isDisabled={showEnunciados}
+                isDisabled={showEnunciados}
                 value={TipoCodigoProduto.MISTO}
               >
                 <Text>Misto</Text>
               </RadioInput>
               <RadioInput
-                // isDisabled={showEnunciados}
+                isDisabled={showEnunciados}
                 value={TipoCodigoProduto.EXCLUSIVO}
                 ml={5}
-                _disabled={{
-                  opacity: 1,
-                }}
               >
                 <Text>Excluisivo</Text>
               </RadioInput>
