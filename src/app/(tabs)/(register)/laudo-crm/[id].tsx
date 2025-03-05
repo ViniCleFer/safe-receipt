@@ -205,10 +205,11 @@ export default function LaudoCrm() {
         setLotes(selectedFormPtp?.lotes!?.map(lote => lote).join(', '));
         setQtdCaixasNaoConformes(
           selectedFormPtp
-            ?.qtdCaixasNaoConformes!?.map(
-              qtdCaixasNaoConforme => qtdCaixasNaoConforme,
+            ?.qtdCaixasNaoConformes!?.filter(
+              item => !(Array.isArray(item) && item?.length === 0),
             )
-            .join(', '),
+            .map(qtdCaixasNaoConforme => qtdCaixasNaoConforme)
+            ?.join(', '),
         );
         setCodigoProdutos(
           selectedFormPtp

@@ -40,6 +40,7 @@ import { formatEnunciadoList } from '@/utils/formatEnunciadoList';
 import {
   GrupoEnunciado,
   EnunciadoToList,
+  Enunciado,
 } from '@/services/requests/enunciados/types';
 import {
   FormPtpStatus,
@@ -178,15 +179,15 @@ export default function FormPtp() {
     setTipoCodigoProduto(TipoCodigoProduto.EXCLUSIVO);
     setIsDatePickerVisible(false);
 
-    setSelectedFormPtp(null);
     setShowEnunciados(false);
     setValue('respostas', []);
-  }, [setSelectedFormPtp, setValue]);
+  }, [setValue]);
 
   const handleBack = useCallback(() => {
+    setSelectedFormPtp(null);
     back();
     handleClear();
-  }, [back, handleClear]);
+  }, [back, handleClear, setSelectedFormPtp]);
 
   const handleSaveInitialFormPtp = useCallback(async () => {
     setIsLoading(true);
@@ -247,6 +248,11 @@ export default function FormPtp() {
     console.log('tipoCodigoProduto', tipoCodigoProduto);
     console.log('codProduto', codProduto);
 
+    const enunciadosListFormatted = enunciadosList
+      ?.map(en => en.enunciados?.map(item => item)?.flatMap(f => f))
+      ?.flatMap(f => f);
+    console.log('ok', JSON.stringify(enunciadosListFormatted, null, 2));
+
     if (tipoCodigoProduto === TipoCodigoProduto.EXCLUSIVO && !codProduto) {
       Alert.alert(
         'Salvar Respostas PTP',
@@ -266,6 +272,11 @@ export default function FormPtp() {
           tipoCodigoProduto === TipoCodigoProduto.EXCLUSIVO
             ? codProduto
             : resposta?.codProduto;
+        const itemEnunciado = enunciadosListFormatted?.find(
+          (enunciado: EnunciadoToList) =>
+            enunciado?.id === resposta?.enunciado_id,
+        );
+        const detalheNaoConformidade = itemEnunciado?.opcoesNaoConformidades;
 
         const data: FormPtpAnswerPost = {
           form_ptp_id: selectedFormPtp?.id!,
@@ -273,7 +284,9 @@ export default function FormPtp() {
           codProduto: codProdutoCorreto,
           naoConformidade: haNaoConformidade,
           detalheNaoConformidade: haNaoConformidade
-            ? resposta?.detalheNaoConformidade
+            ? itemEnunciado?.isChecked
+              ? detalheNaoConformidade
+              : resposta?.detalheNaoConformidade
             : [],
           lote: haNaoConformidade ? resposta?.lote : null,
           qtdPalletsNaoConforme: haNaoConformidade
@@ -307,7 +320,7 @@ export default function FormPtp() {
           itensProcessados.push({
             ...resposta,
             status: 'Erro',
-            data,
+            ...data,
           });
         }
       }
@@ -359,7 +372,6 @@ export default function FormPtp() {
               {
                 text: 'Fechar',
                 onPress: () => {
-                  handleClear();
                   push(`/laudo-crm/${selectedFormPtp?.id}`);
                 },
               },
