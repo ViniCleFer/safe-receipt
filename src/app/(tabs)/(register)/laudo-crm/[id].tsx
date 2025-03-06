@@ -27,7 +27,12 @@ import {
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, StyleSheet, TouchableOpacity } from 'react-native';
 import { shade } from 'polished';
-import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import {
+  router,
+  useFocusEffect,
+  useLocalSearchParams,
+  useNavigationContainerRef,
+} from 'expo-router';
 import { decode } from 'base64-arraybuffer';
 import { mask } from 'remask';
 
@@ -56,6 +61,7 @@ import { tiposDivergencia } from '@/utils/tiposDivergencia';
 import { TipoDivergencia } from '@/services/requests/divergences/types';
 import { getNextStepsByDivergencyType } from '@/utils/getNextStepsByDivergencyType';
 import { createDivergenceRequest } from '@/services/requests/divergences/utils';
+import { StackActions } from '@react-navigation/native';
 
 const styles = StyleSheet.create({
   container: {
@@ -81,6 +87,7 @@ const styles = StyleSheet.create({
 export default function LaudoCrm() {
   const { colors } = useTheme();
   const { replace } = router;
+  const rootNavigation = useNavigationContainerRef();
 
   // const id = '111f2687-9f88-4500-bf1b-eb2238d22750';
   const { id: formPtpId } = useLocalSearchParams<{ id: string }>();
@@ -257,9 +264,9 @@ export default function LaudoCrm() {
     setQuantidadeNotaFiscal('');
     setNaoConformidadesList([]);
     setSelectedFormPtp(null);
-
+    rootNavigation.dispatch(StackActions.popToTop());
     replace('/(tabs)/(list)');
-  }, [replace, setSelectedFormPtp]);
+  }, [replace, setSelectedFormPtp, rootNavigation, StackActions]);
 
   const pickImageInLibrary = async (tipoEvidencia: TipoEvidencia) => {
     setLoadingPreview(true);
@@ -698,6 +705,8 @@ export default function LaudoCrm() {
     quantidadeNotaFiscal,
     user,
     setSelectedFormPtp,
+    handleBack,
+    haDivergencia,
   ]);
 
   const handleCancel = useCallback(() => {

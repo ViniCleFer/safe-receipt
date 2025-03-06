@@ -15,6 +15,7 @@ import { NativeBaseProvider, StatusBar } from 'native-base';
 import { THEME } from '@/styles/theme';
 import { Loading } from '@/components/Loading';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import * as Updates from 'expo-updates';
 
 LogBox.ignoreAllLogs();
 
@@ -36,7 +37,27 @@ export default function RootLayout() {
 
   // const segments = useSegments();
   // const router = useRouter();
+  const { isUpdateAvailable, isDownloading } = Updates.useUpdates();
+
   const [appIsReady, setAppIsReady] = useState(false);
+
+  const handleUpdate = async () => {
+    try {
+      await Updates.fetchUpdateAsync();
+      await Updates.reloadAsync();
+    } catch (error) {
+      Alert.alert(
+        'Erro ao atualizar',
+        'Ocorreu um erro ao tentar atualizar o App. Tente novamente mais tarde',
+      );
+    }
+  };
+
+  useEffect(() => {
+    if (isUpdateAvailable && !isDownloading) {
+      handleUpdate();
+    }
+  }, [isUpdateAvailable, isDownloading]);
 
   useEffect(() => {
     async function prepare() {
