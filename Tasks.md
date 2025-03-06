@@ -19,6 +19,7 @@ Se Misto = Se é misto deixar o "Código Produto" em branco
 [X] O campo "Qtde Caixas Não Conforme" pode ser aberto e precisa ser teclado numérico igual SKU de Cadastro de Divergência
 [X] O campo "Código de Produto" precisa ser um array (Mais de um código de produto por Resposta) vai depender se é exclusivo ou misto
 [X] Campo "Código Produto" precisa ser teclado numérico igual SKU de Cadastro de Divergência (Tentar manter XX.XXXXXX sempre 2 dígitos e um ponto (.) e mais 6 no final)
+[X] Trocar a label de "Qtde de caixas não conforme?" para "Qtde de caixas/fardos não conforme?"
 
 Opções de Não Conformidade precisa vir de acordo com as questões
 
@@ -50,6 +51,7 @@ Opções de Não Conformidade precisa vir de acordo com as questões
 [X] Trazer a UP de Origem do Formulário PTP
 [X] Validar se dá para serpara as Evidencias em 4 opções (UC / Etiqueta Caixa / Avarias / Palletes) manter a funcionalidade como está limitando por 3 fotos de cada
 [X] Adicionar um campo livre "Obervações Gerais" limite de 1000 caracteres depois das anomalias encontradas
+[X] Colocar o campo "Turno" acima do campo "Nota Fiscal"
 
 ### Evidências
 
