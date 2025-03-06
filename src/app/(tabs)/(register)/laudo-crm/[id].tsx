@@ -548,6 +548,7 @@ export default function LaudoCrm() {
               const extension = mime.getExtension(i?.mimetype);
 
               return {
+                type: i?.type,
                 base64: i?.base64,
                 mimetype: i?.mimetype,
                 filename: i?.filename
@@ -558,15 +559,15 @@ export default function LaudoCrm() {
           : [];
 
       if (evidencias?.length > 0) {
-        const folderName = generateFolderName(
-          true,
-          response?.data[0]?.id,
-          null,
-        );
-
         let evidenciasIds: string[] = [];
 
         for await (const evidencia of evidencias) {
+          const folderName = generateFolderName(
+            true,
+            response?.data[0]?.id,
+            null,
+            evidencia?.type,
+          );
           console.log('folderName', folderName);
 
           const { data, error } = await supabase.storage
@@ -1150,7 +1151,7 @@ export default function LaudoCrm() {
             <Input
               w="full"
               variant="underlined"
-              height={14}
+              minHeight={14}
               size="md"
               fontSize="md"
               pb={0}
@@ -1175,7 +1176,7 @@ export default function LaudoCrm() {
             <Input
               w="full"
               variant="underlined"
-              height={14}
+              minHeight={14}
               size="md"
               fontSize="md"
               pb={0}
@@ -1195,12 +1196,12 @@ export default function LaudoCrm() {
 
           <Box mb={1}>
             <Text mb={-2} color="gray.750">
-              Qtd Caixas Analisadas:
+              Qtd Caixas Não Conforme:
             </Text>
             <Input
               w="full"
               variant="underlined"
-              height={14}
+              minHeight={14}
               size="md"
               fontSize="md"
               pb={0}
@@ -1336,7 +1337,7 @@ export default function LaudoCrm() {
             <Input
               w="full"
               variant="underlined"
-              height={14}
+              minHeight={14}
               size="md"
               fontSize="md"
               pb={0}

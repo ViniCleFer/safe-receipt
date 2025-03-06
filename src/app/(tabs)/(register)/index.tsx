@@ -18,9 +18,9 @@ export default function SelectFormType() {
     navigate('/select-divergency-type');
   }, [navigate]);
 
-  const handleCreateLaudoCrm = useCallback(() => {
-    navigate('/laudo-crm/07edc323-7b33-4018-bfb2-d11dbcc40118');
-  }, [navigate]);
+  // const handleCreateLaudoCrm = useCallback(() => {
+  //   navigate('/laudo-crm/58d40fbc-2848-4de7-83c0-a38e987d3313');
+  // }, [navigate]);
 
   return (
     <ScrollScreenContainer subtitle="Selecione o tipo de formulário para cadastro">
@@ -45,7 +45,7 @@ export default function SelectFormType() {
           </HStack>
         </Card>
       </Pressable>
-      <Pressable onPress={handleCreateLaudoCrm}>
+      {/* <Pressable onPress={handleCreateLaudoCrm}>
         <Card
           bg="white"
           mt="8px"
@@ -65,7 +65,7 @@ export default function SelectFormType() {
             </Text>
           </HStack>
         </Card>
-      </Pressable>
+      </Pressable> */}
       <Pressable onPress={handleCreateDivergencia}>
         <Card
           bg="white"
