@@ -82,7 +82,7 @@ export default function LaudoCrm() {
   const { colors } = useTheme();
   const { replace } = router;
 
-  // const { id: formPtpId = '111f2687-9f88-4500-bf1b-eb2238d22750' } =
+  // const id = '111f2687-9f88-4500-bf1b-eb2238d22750';
   const { id: formPtpId } = useLocalSearchParams<{ id: string }>();
 
   const user = useAuthStore(state => state.user);
@@ -261,7 +261,7 @@ export default function LaudoCrm() {
     replace('/(tabs)/(list)');
   }, [replace, setSelectedFormPtp]);
 
-  const pickImageInLibrary = async () => {
+  const pickImageInLibrary = async (tipoEvidencia: TipoEvidencia) => {
     setLoadingPreview(true);
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -312,6 +312,8 @@ export default function LaudoCrm() {
 
         // console.log('photo', JSON.stringify(photo, null, 2));
 
+        console.log('tipoEvidencia', tipoEvidencia);
+
         setImagesList(prevState => [
           ...prevState,
           {
@@ -338,32 +340,28 @@ export default function LaudoCrm() {
       setIsCameraActive(false);
       setLoadingPreview(false);
     }
-  }, []);
+  }, [tipoEvidencia]);
 
   const handleCamera = useCallback(
     (tipoEvidencia: TipoEvidencia) => {
       console.log('permission', permission);
+      setTipoEvidencia(tipoEvidencia);
       if (permission && !permission?.granted) {
         requestPermission();
       } else {
-        if (imagesList?.length >= 3) {
+        const imagesListFiltered = imagesList?.filter(
+          i => i?.type === tipoEvidencia,
+        );
+
+        if (imagesListFiltered?.length >= 3) {
           Alert.alert('Atenção', 'Você atingiu o limite de 3 imagens.');
         } else {
-          setTipoEvidencia(tipoEvidencia);
           setIsCameraActive(true);
         }
       }
     },
     [permission, requestPermission, imagesList],
   );
-
-  const handleSaveDivergence = useCallback(async () => {
-    setIsLoading(true);
-
-    // try {
-
-    setIsLoading(false);
-  }, [handleBack, imagesList, supabase]);
 
   const handleSaveLaudoCrm = useCallback(async () => {
     console.log('imagesList', JSON.stringify(imagesList.length, null, 2));
@@ -722,6 +720,7 @@ export default function LaudoCrm() {
 
   const handlePhotoLibrary = useCallback(
     async (tipoEvidencia: TipoEvidencia) => {
+      setTipoEvidencia(tipoEvidencia);
       const imagesListFiltered = imagesList?.filter(
         i => i?.type === tipoEvidencia,
       );
@@ -729,8 +728,7 @@ export default function LaudoCrm() {
       if (imagesListFiltered?.length >= 3) {
         Alert.alert('Atenção', 'Você atingiu o limite de 3 imagens.');
       } else {
-        setTipoEvidencia(tipoEvidencia);
-        await pickImageInLibrary();
+        await pickImageInLibrary(tipoEvidencia);
       }
     },
     [imagesList],
@@ -1092,7 +1090,7 @@ export default function LaudoCrm() {
               placeholderTextColor="gray.700"
               value={placa}
               onChangeText={t => {
-                setPlaca(mask(t, '999-9999'));
+                setPlaca(mask(t, 'SSS-SSSS'));
               }}
               maxLength={8}
               _focus={{ borderColor: 'primary.700' }}
@@ -1100,6 +1098,15 @@ export default function LaudoCrm() {
               autoComplete="off"
             />
           </Box>
+
+          <SelectWithLabel
+            label="Turno"
+            selectedValue={turno}
+            onValueChange={setTurno}
+            options={listaTurnos?.map(s => (
+              <Select.Item key={s?.value} label={s?.label} value={s?.value} />
+            ))}
+          />
 
           <Box mb={1}>
             <Text mb={-2} color="gray.750">
@@ -1268,15 +1275,6 @@ export default function LaudoCrm() {
               autoComplete="off"
             />
           </Box>
-
-          <SelectWithLabel
-            label="Turno"
-            selectedValue={turno}
-            onValueChange={setTurno}
-            options={listaTurnos?.map(s => (
-              <Select.Item key={s?.value} label={s?.label} value={s?.value} />
-            ))}
-          />
 
           {/* <Box mb={1}>
             <Text mb={-2} color="gray.750">

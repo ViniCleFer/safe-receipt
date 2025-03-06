@@ -106,6 +106,7 @@ export default function LuadoCrmList() {
 
             return {
               ...laudo,
+              observacoes: laudo?.observacoes || 'Sem observações',
               tiposNaoConformidade: tiposNaoConformidadeFormatted,
               lotes: lotesFormatted,
               codigosProdutos: codigosProdutosFormatted,
@@ -237,6 +238,12 @@ export default function LuadoCrmList() {
                   </Text>
                   <Text color="black" fontWeight="semibold">
                     {item?.codigosProdutos}
+                  </Text>
+                </VStack>
+                <VStack pl={2} mb={4}>
+                  <Text color="gray.750">Observações Gerais</Text>
+                  <Text color="black" fontWeight="semibold">
+                    {item?.observacoes}
                   </Text>
                 </VStack>
                 {/* <VStack pl={2} mb={4} width="100%">

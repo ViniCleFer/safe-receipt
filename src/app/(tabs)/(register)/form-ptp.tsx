@@ -793,7 +793,7 @@ export default function FormPtp() {
                                     />
 
                                     <InputWithLabelControlled
-                                      label="Qtde de caixas não conforme?"
+                                      label="Qtde de caixas/fardos não conforme?"
                                       control={control}
                                       index={index}
                                       name="qtdCaixasNaoConforme"

@@ -29,10 +29,15 @@ export async function getLaudosCrmRequest(
   //   console.error('Error getFormsPtpRequest', error);
   //   return null;
   // }
-  const { data, error, status } = await supabase.from('laudos-crm').select(`
+  const { data, error, status } = await supabase
+    .from('laudos-crm')
+    .select(
+      `
     *,
     forms-ptp:forms-ptp(*)
-  `);
+  `,
+    )
+    .order('created_at', { ascending: false });
 
   if (error) {
     console.error('Error getLaudosCrmRequest', JSON.stringify(error, null, 2));

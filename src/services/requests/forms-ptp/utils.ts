@@ -31,8 +31,8 @@ export async function getFormsPtpRequest(
   // }
   const { data, error, status, statusText, count } = await supabase
     .from('forms-ptp')
-    .select();
-
+    .select()
+    .order('created_at', { ascending: false });
   if (error) {
     console.error('Error getFormsPtpRequest', JSON.stringify(error, null, 2));
     console.error('Error getFormsPtpRequest', JSON.stringify(data, null, 2));

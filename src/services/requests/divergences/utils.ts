@@ -27,7 +27,10 @@ export async function getDivergencesRequest(
   //   console.error('Error getDivergencesRequest', error);
   //   return null;
   // }
-  const { data, error, status } = await supabase.from('divergencias').select();
+  const { data, error, status } = await supabase
+    .from('divergencias')
+    .select()
+    .order('created_at', { ascending: false });
 
   if (error) {
     console.error(
