@@ -58,7 +58,10 @@ import useAuthStore from '@/store/auth';
 import useFormPtpStore from '@/store/forms-ptp';
 import { RadioInput } from '@/components/RadioInput';
 import { tiposDivergencia } from '@/utils/tiposDivergencia';
-import { TipoDivergencia } from '@/services/requests/divergences/types';
+import {
+  DivergenciaPost,
+  TipoDivergencia,
+} from '@/services/requests/divergences/types';
 import { getNextStepsByDivergencyType } from '@/utils/getNextStepsByDivergencyType';
 import { createDivergenceRequest } from '@/services/requests/divergences/utils';
 import { StackActions } from '@react-navigation/native';
@@ -448,7 +451,7 @@ export default function LaudoCrm() {
         quantidadeNotaFiscal,
       );
 
-      const data: any = {
+      const data: DivergenciaPost = {
         tipoDivergencia: divergenciaSelecionada!,
         evidencias: [],
         skuFaltandoFisicamente:
@@ -478,7 +481,9 @@ export default function LaudoCrm() {
             ? Number(quantidadeNotaFiscal)
             : null,
         proximoPasso,
-        user_id: user?.id,
+        upOrigem,
+        cdOrigem,
+        user_id: user?.id!,
       };
 
       console.log('data divergencia', JSON.stringify(data, null, 2));
@@ -625,18 +630,37 @@ export default function LaudoCrm() {
           }
 
           if (responseUpdate?.status === 200) {
-            return Alert.alert(
-              'Sucesso!',
-              'Laudo CRM cadastrado com sucesso!',
-              [
+            if (haDivergencia === 'sim') {
+              const proximoPasso = getNextStepsByDivergencyType(
+                divergenciaSelecionada!,
+                sku,
+                quantidade,
+                skuNotaFiscal,
+                quantidadeNotaFiscal,
+              );
+
+              return Alert.alert('Próximos Passos', proximoPasso, [
                 {
-                  text: 'Fechar',
+                  text: 'OK, entendi',
                   onPress: () => {
                     handleBack();
                   },
                 },
-              ],
-            );
+              ]);
+            } else {
+              return Alert.alert(
+                'Sucesso!',
+                'Laudo CRM cadastrado com sucesso!',
+                [
+                  {
+                    text: 'Fechar',
+                    onPress: () => {
+                      handleBack();
+                    },
+                  },
+                ],
+              );
+            }
           }
         }
       }
@@ -1034,6 +1058,35 @@ export default function LaudoCrm() {
                   </Box>
                 </VStack>
               )}
+
+              <VStack space={6}>
+                <SelectWithLabel
+                  label="UP Origem"
+                  selectedValue={upOrigem}
+                  // onValueChange={setUp}
+                  options={listaUPsOrigem?.map(s => (
+                    <Select.Item
+                      key={s?.value}
+                      label={s?.label}
+                      value={s?.value}
+                    />
+                  ))}
+                  isDisabled
+                />
+
+                <SelectWithLabel
+                  label="CD Origem"
+                  selectedValue={cdOrigem}
+                  onValueChange={setCdOrigem}
+                  options={listaCDsOrigem?.map(s => (
+                    <Select.Item
+                      key={s?.value}
+                      label={s?.label}
+                      value={s?.value}
+                    />
+                  ))}
+                />
+              </VStack>
             </>
           )}
 
@@ -1328,6 +1381,7 @@ export default function LaudoCrm() {
             options={listaCDsOrigem?.map(s => (
               <Select.Item key={s?.value} label={s?.label} value={s?.value} />
             ))}
+            isDisabled={haDivergencia === 'sim'}
           />
 
           <Box mb={1}>

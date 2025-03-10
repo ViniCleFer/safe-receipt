@@ -59,6 +59,7 @@ export interface DivergenciaPost {
   proximoPasso: string;
   upOrigem: string;
   cdOrigem: string;
+  user_id: string;
 }
 
 export interface DivergenciaPut extends DivergenciaPost {

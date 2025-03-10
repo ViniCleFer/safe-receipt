@@ -3,17 +3,16 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import dayjs from 'dayjs';
 import { Circle, HStack, Text, useTheme, View, VStack } from 'native-base';
-import { Image } from 'expo-image';
+// import { Image } from 'expo-image';
 
 import { Card } from '@/components/Card';
 import { Loading } from '@/components/Loading';
 import { ScrollScreenContainer } from '@/components/ScrollScreenContainer';
 
-import { supabase } from '@/lib/supabase';
-
 import { LaudoCrmWithAnswer } from '@/services/requests/laudos/types';
 import { getLaudosCrmRequest } from '@/services/requests/laudos/utils';
 
+import { listaCDsOrigem, listaUPsOrigem } from '@/utils/listaUPs';
 import { tiposNaoConformidade as tiposNaoConformidadeList } from '@/utils/tiposNaoConformidade';
 
 export default function LuadoCrmList() {
@@ -104,8 +103,17 @@ export default function LuadoCrmList() {
               codigosProdutosFormatted = 'Sem códigos de produtos cadastrados';
             }
 
+            const upOrigem = listaUPsOrigem?.find(
+              u => u?.value === laudo?.upOrigem,
+            )?.label;
+            const cdOrigem = listaCDsOrigem?.find(
+              u => u?.value === laudo?.cdOrigem,
+            )?.label;
+
             return {
               ...laudo,
+              upOrigem: upOrigem || 'Sem UP de Origem',
+              cdOrigem: cdOrigem || 'Sem CD de Origem',
               observacoes: laudo?.observacoes || 'Sem observações',
               tiposNaoConformidade: tiposNaoConformidadeFormatted,
               lotes: lotesFormatted,

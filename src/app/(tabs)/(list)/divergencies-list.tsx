@@ -15,7 +15,7 @@ import {
 } from '@/services/requests/divergences/types';
 import { getDivergencesRequest } from '@/services/requests/divergences/utils';
 
-import { supabase } from '@/lib/supabase';
+import { listaCDsOrigem, listaUPsOrigem } from '@/utils/listaUPs';
 
 export default function DivergenciesList() {
   const { colors } = useTheme();
@@ -33,35 +33,45 @@ export default function DivergenciesList() {
 
         if (response?.data?.length > 0) {
           for await (const divergencia of response?.data) {
-            const evidencias = divergencia?.evidencias;
+            // const evidencias = divergencia?.evidencias;
 
             let evidenciasDownload: any[] = [];
 
-            if (evidencias?.length === 0) {
-              evidenciasDownload = [];
-            } else {
-              for await (const evidenciaId of evidencias) {
-                const { data } = supabase.storage
-                  .from('evidencias')
-                  .getPublicUrl(
-                    `divergencia/${divergencia?.id}/${evidenciaId}`,
-                  );
+            // if (evidencias?.length === 0) {
+            //   evidenciasDownload = [];
+            // } else {
+            //   for await (const evidenciaId of evidencias) {
+            //     const { data } = supabase.storage
+            //       .from('evidencias')
+            //       .getPublicUrl(
+            //         `divergencia/${divergencia?.id}/${evidenciaId}`,
+            //       );
 
-                const evidencia = data?.publicUrl;
+            //     const evidencia = data?.publicUrl;
 
-                if (evidencia) {
-                  evidenciasDownload = [...evidenciasDownload, evidencia];
-                } else {
-                  evidenciasDownload = [...evidenciasDownload];
-                }
-              }
-            }
+            //     if (evidencia) {
+            //       evidenciasDownload = [...evidenciasDownload, evidencia];
+            //     } else {
+            //       evidenciasDownload = [...evidenciasDownload];
+            //     }
+            //   }
+            // }
+
+            const upOrigem = listaUPsOrigem?.find(
+              u => u?.value === divergencia?.upOrigem,
+            )?.label;
+            const cdOrigem = listaCDsOrigem?.find(
+              u => u?.value === divergencia?.cdOrigem,
+            )?.label;
 
             divergencias = [
               ...divergencias,
               {
                 ...divergencia,
-                evidencias: [...evidenciasDownload],
+                upOrigem: upOrigem || 'Sem UP de Origem',
+                cdOrigem: cdOrigem || 'Sem CD de Origem',
+                evidencias: [],
+                // evidencias: [...evidenciasDownload],
               },
             ];
           }
@@ -202,17 +212,17 @@ export default function DivergenciesList() {
                 <VStack pl={2} mb={4}>
                   <Text color="gray.750">UP de Origem</Text>
                   <Text color="black" fontWeight="semibold">
-                    {item?.upOrigem || 'Sem UP de Origem'}
+                    {item?.upOrigem}
                   </Text>
                 </VStack>
                 <VStack pl={2} mb={4}>
                   <Text color="gray.750">CD de Origem</Text>
                   <Text color="black" fontWeight="semibold">
-                    {item?.cdOrigem || 'Sem CD de Origem'}
+                    {item?.cdOrigem}
                   </Text>
                 </VStack>
 
-                <VStack pl={2} mb={4} width="100%">
+                {/* <VStack pl={2} mb={4} width="100%">
                   <Text color="gray.750">Evidências</Text>
                   {item?.evidencias?.length > 0 ? (
                     <Box style={{ gap: 8 }}>
@@ -232,7 +242,7 @@ export default function DivergenciesList() {
                       Sem evidências
                     </Text>
                   )}
-                </VStack>
+                </VStack> */}
               </Card>
             ))
           ) : (
