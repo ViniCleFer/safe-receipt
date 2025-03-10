@@ -38,6 +38,8 @@ export interface Divergencia {
   skuNotaFiscal: string | null;
   qtdNotaFiscal: number | null;
   proximoPasso: string;
+  upOrigem: string;
+  cdOrigem: string;
   created_at: Date;
   updated_at: Date;
   canceled_at: Date | null;
@@ -55,6 +57,8 @@ export interface DivergenciaPost {
   skuNotaFiscal: string | null;
   qtdNotaFiscal: number | null;
   proximoPasso: string;
+  upOrigem: string;
+  cdOrigem: string;
 }
 
 export interface DivergenciaPut extends DivergenciaPost {

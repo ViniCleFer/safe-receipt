@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
 import {
   type CameraPictureOptions,
   CameraView,
@@ -15,6 +14,7 @@ import {
   Image,
   Input,
   Pressable,
+  Select,
   Text,
   useTheme,
   View,
@@ -25,19 +25,21 @@ import { shade } from 'polished';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { router, useLocalSearchParams } from 'expo-router';
+import { decode } from 'base64-arraybuffer';
 
 import { Button } from '@/components/Button';
 import { Loading } from '@/components/Loading';
+import { SelectWithLabel } from '@/components/SelectWithLabel';
 import { ScrollScreenContainer } from '@/components/ScrollScreenContainer';
 
 import { TipoDivergencia } from '@/services/requests/divergences/types';
 import { createDivergenceRequest } from '@/services/requests/divergences/utils';
-import { router, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { generateFolderName } from '@/utils/generateFoldername';
 import useAuthStore from '@/store/auth';
-import { decode } from 'base64-arraybuffer';
 import { getNextStepsByDivergencyType } from '@/utils/getNextStepsByDivergencyType';
+import { listaCDsOrigem, listaUPsOrigem } from '@/utils/listaUPs';
 
 const styles = StyleSheet.create({
   container: {
@@ -97,6 +99,8 @@ export default function Divergency() {
   const [quantidade, setQuantidade] = useState('');
   const [skuNotaFiscal, setSkuNotaFiscal] = useState('');
   const [quantidadeNotaFiscal, setQuantidadeNotaFiscal] = useState('');
+  const [up, setUp] = useState('');
+  const [cd, setCd] = useState('');
 
   const [permission, requestPermission] = useCameraPermissions();
 
@@ -242,7 +246,7 @@ export default function Divergency() {
   }, [permission, requestPermission, imagesList]);
 
   const handleSaveDivergence = useCallback(async () => {
-    if (!sku || !quantidade || imagesList?.length === 0) {
+    if (!sku || !quantidade || !cd || !up || imagesList?.length === 0) {
       setIsLoading(false);
       return Alert.alert(
         'Cadastro de Divergência',
@@ -302,6 +306,8 @@ export default function Divergency() {
           ? Number(quantidadeNotaFiscal)
           : null,
       proximoPasso,
+      upOrigem: up,
+      cdOrigem: cd,
       user_id: user?.id,
     };
 
@@ -460,6 +466,8 @@ export default function Divergency() {
     skuNotaFiscal,
     quantidadeNotaFiscal,
     supabase,
+    up,
+    cd,
   ]);
 
   const handleCancel = useCallback(() => {
@@ -871,6 +879,26 @@ export default function Divergency() {
             )} */}
           </VStack>
         )}
+
+        <VStack px={2} pt={6} space={6}>
+          <SelectWithLabel
+            label="UP de Origem"
+            selectedValue={up}
+            onValueChange={setUp}
+            options={listaUPsOrigem?.map(s => (
+              <Select.Item key={s?.value} label={s?.label} value={s?.value} />
+            ))}
+          />
+
+          <SelectWithLabel
+            label="CD de Origem"
+            selectedValue={cd}
+            onValueChange={setCd}
+            options={listaCDsOrigem?.map(s => (
+              <Select.Item key={s?.value} label={s?.label} value={s?.value} />
+            ))}
+          />
+        </VStack>
 
         <HStack mt="8%" px={2} width="100%" justifyContent="space-between">
           <Button

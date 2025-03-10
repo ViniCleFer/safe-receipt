@@ -199,6 +199,19 @@ export default function DivergenciesList() {
                   </Text>
                 </VStack>
 
+                <VStack pl={2} mb={4}>
+                  <Text color="gray.750">UP de Origem</Text>
+                  <Text color="black" fontWeight="semibold">
+                    {item?.upOrigem || 'Sem UP de Origem'}
+                  </Text>
+                </VStack>
+                <VStack pl={2} mb={4}>
+                  <Text color="gray.750">CD de Origem</Text>
+                  <Text color="black" fontWeight="semibold">
+                    {item?.cdOrigem || 'Sem CD de Origem'}
+                  </Text>
+                </VStack>
+
                 <VStack pl={2} mb={4} width="100%">
                   <Text color="gray.750">Evidências</Text>
                   {item?.evidencias?.length > 0 ? (
