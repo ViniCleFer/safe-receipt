@@ -133,6 +133,13 @@ export default function DivergenciesList() {
                   </Text>
                 </VStack>
 
+                <VStack pl={2} mb={4}>
+                  <Text color="gray.750">Nota Fiscal</Text>
+                  <Text color="black" fontWeight="semibold">
+                    {item?.notaFiscal}
+                  </Text>
+                </VStack>
+
                 {item?.tipoDivergencia === TipoDivergencia.FALTA && (
                   <>
                     <VStack pl={2} mb={4}>

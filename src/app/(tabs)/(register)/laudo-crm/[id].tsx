@@ -106,7 +106,7 @@ export default function LaudoCrm() {
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [imagesList, setImagesList] = useState<any[]>([]);
 
-  const [documentoTransporte, setDocumentoTransporte] = useState('');
+  const [remessa, setRemessa] = useState('');
   const [transportador, setTransportador] = useState('');
   const [placa, setPlaca] = useState('');
   const [notaFiscal, setNotaFiscal] = useState(''); // inicial
@@ -243,7 +243,7 @@ export default function LaudoCrm() {
   };
 
   const handleBack = useCallback(() => {
-    setDocumentoTransporte('');
+    setRemessa('');
     setTransportador('');
     setPlaca('');
     setNotaFiscal('');
@@ -262,7 +262,6 @@ export default function LaudoCrm() {
     setDivergenciaSelecionada(null);
     setSku('');
     setQuantidade('');
-    setImagesList([]);
     setSkuNotaFiscal('');
     setQuantidadeNotaFiscal('');
     setNaoConformidadesList([]);
@@ -293,7 +292,15 @@ export default function LaudoCrm() {
 
         setImagesList(prevState => [
           ...prevState,
-          { uri, base64, mimetype, filename, size, type: tipoEvidencia },
+          {
+            uri,
+            base64,
+            mimetype,
+            filename,
+            size,
+            type: tipoEvidencia,
+            id: new Date().getTime(),
+          },
         ]);
 
         setTipoEvidencia(null);
@@ -333,6 +340,7 @@ export default function LaudoCrm() {
             size,
             filename,
             type: tipoEvidencia,
+            id: new Date().getTime(),
           },
         ]);
 
@@ -380,10 +388,7 @@ export default function LaudoCrm() {
       JSON.stringify(naoConformidadesList, null, 2),
     );
     console.log('formPtpId', JSON.stringify(formPtpId, null, 2));
-    console.log(
-      'documentoTransporte',
-      JSON.stringify(documentoTransporte, null, 2),
-    );
+    console.log('remessa', JSON.stringify(remessa, null, 2));
     console.log('transportador', JSON.stringify(transportador, null, 2));
     console.log('placa', JSON.stringify(placa, null, 2));
     console.log('notaFiscal', JSON.stringify(notaFiscal, null, 2));
@@ -399,7 +404,7 @@ export default function LaudoCrm() {
     setIsLoading(true);
 
     if (
-      !documentoTransporte ||
+      !remessa ||
       !transportador ||
       !placa ||
       !notaFiscal ||
@@ -483,6 +488,7 @@ export default function LaudoCrm() {
         proximoPasso,
         upOrigem,
         cdOrigem,
+        notaFiscal,
         user_id: user?.id!,
       };
 
@@ -508,7 +514,7 @@ export default function LaudoCrm() {
     );
 
     const data: LaudoCrmPost = {
-      documentoTransporte,
+      remessa,
       transportador,
       placa,
       notaFiscal,
@@ -705,7 +711,7 @@ export default function LaudoCrm() {
   }, [
     replace,
     imagesList,
-    documentoTransporte,
+    remessa,
     transportador,
     placa,
     notaFiscal,
@@ -1098,7 +1104,7 @@ export default function LaudoCrm() {
 
           <Box mb={1}>
             <Text mb={-2} color="gray.750">
-              Documento de Transporte:
+              Remessa:
             </Text>
             <Input
               w="full"
@@ -1108,9 +1114,9 @@ export default function LaudoCrm() {
               fontSize="md"
               pb={0}
               placeholderTextColor="gray.700"
-              value={documentoTransporte}
+              value={remessa}
               onChangeText={t => {
-                setDocumentoTransporte(t);
+                setRemessa(t);
               }}
               _focus={{ borderColor: 'primary.700' }}
               autoComplete="off"
@@ -1438,7 +1444,7 @@ export default function LaudoCrm() {
                       <Pressable
                         onPress={() => {
                           const newImagesList = imagesList?.filter(
-                            (_, idx) => idx !== index,
+                            img => img.id !== image.id,
                           );
 
                           setImagesList(newImagesList);
@@ -1515,7 +1521,7 @@ export default function LaudoCrm() {
                       <Pressable
                         onPress={() => {
                           const newImagesList = imagesList?.filter(
-                            (_, idx) => idx !== index,
+                            img => img.id !== image.id,
                           );
 
                           setImagesList(newImagesList);
@@ -1594,7 +1600,7 @@ export default function LaudoCrm() {
                       <Pressable
                         onPress={() => {
                           const newImagesList = imagesList?.filter(
-                            (_, idx) => idx !== index,
+                            img => img.id !== image.id,
                           );
 
                           setImagesList(newImagesList);
@@ -1673,7 +1679,7 @@ export default function LaudoCrm() {
                       <Pressable
                         onPress={() => {
                           const newImagesList = imagesList?.filter(
-                            (_, idx) => idx !== index,
+                            img => img.id !== image.id,
                           );
 
                           setImagesList(newImagesList);

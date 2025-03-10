@@ -67,6 +67,7 @@ export default function LuadoCrmList() {
             const tiposNaoConformidade = laudo?.tiposNaoConformidade;
             const lotes = laudo?.lotes;
             const codigosProdutos = laudo?.codigoProdutos;
+            const qtdCaixasNaoConformes = laudo?.qtdCaixasNaoConformes;
 
             let tiposNaoConformidadeFormatted = '';
 
@@ -87,7 +88,7 @@ export default function LuadoCrmList() {
 
             if (lotes?.length > 0) {
               lotesFormatted = lotes
-                .map((lote: string) => '- ' + lote)
+                .map((lote: string) => '-' + lote)
                 .join('\n');
             } else {
               lotesFormatted = 'Sem lotes cadastrados';
@@ -97,10 +98,21 @@ export default function LuadoCrmList() {
 
             if (codigosProdutos?.length > 0) {
               codigosProdutosFormatted = codigosProdutos
-                .map((codigoProduto: string) => '- ' + codigoProduto)
+                .map((codigoProduto: string) => '-' + codigoProduto)
                 .join('\n');
             } else {
               codigosProdutosFormatted = 'Sem códigos de produtos cadastrados';
+            }
+
+            let qtdCaixasNaoConformesFormatted = '';
+
+            if (qtdCaixasNaoConformes?.length > 0) {
+              qtdCaixasNaoConformesFormatted = qtdCaixasNaoConformes
+                .map((codigoProduto: string) => '-' + codigoProduto)
+                .join('\n');
+            } else {
+              qtdCaixasNaoConformesFormatted =
+                'Sem códigos de produtos cadastrados';
             }
 
             const upOrigem = listaUPsOrigem?.find(
@@ -118,6 +130,7 @@ export default function LuadoCrmList() {
               tiposNaoConformidade: tiposNaoConformidadeFormatted,
               lotes: lotesFormatted,
               codigosProdutos: codigosProdutosFormatted,
+              qtdCaixasNaoConformes: qtdCaixasNaoConformesFormatted,
             };
           });
 
@@ -187,9 +200,9 @@ export default function LuadoCrmList() {
                   </Text>
                 </VStack>
                 <VStack pl={2} mb={4}>
-                  <Text color="gray.750">Documento Transporte</Text>
+                  <Text color="gray.750">Remessa</Text>
                   <Text color="black" fontWeight="semibold">
-                    {item?.documentoTransporte}
+                    {item?.remessa}
                   </Text>
                 </VStack>
                 <VStack pl={2} mb={4}>
@@ -246,6 +259,12 @@ export default function LuadoCrmList() {
                   </Text>
                   <Text color="black" fontWeight="semibold">
                     {item?.codigosProdutos}
+                  </Text>
+                </VStack>
+                <VStack pl={2} mb={4}>
+                  <Text color="gray.750">Qtd. Caixas não conformes</Text>
+                  <Text color="black" fontWeight="semibold">
+                    {item?.qtdCaixasNaoConformes}
                   </Text>
                 </VStack>
                 <VStack pl={2} mb={4}>

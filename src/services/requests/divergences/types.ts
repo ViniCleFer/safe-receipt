@@ -40,6 +40,7 @@ export interface Divergencia {
   proximoPasso: string;
   upOrigem: string;
   cdOrigem: string;
+  notaFiscal: string;
   created_at: Date;
   updated_at: Date;
   canceled_at: Date | null;
@@ -59,6 +60,7 @@ export interface DivergenciaPost {
   proximoPasso: string;
   upOrigem: string;
   cdOrigem: string;
+  notaFiscal: string;
   user_id: string;
 }
 

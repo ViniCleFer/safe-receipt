@@ -286,7 +286,7 @@ export default function FormPtp() {
           detalheNaoConformidade: haNaoConformidade
             ? itemEnunciado?.isChecked
               ? detalheNaoConformidade
-              : resposta?.detalheNaoConformidade
+              : resposta?.detalheNaoConformidade || []
             : [],
           lote: haNaoConformidade ? resposta?.lote : null,
           qtdPalletsNaoConforme: haNaoConformidade
@@ -351,13 +351,13 @@ export default function FormPtp() {
           setSelectedFormPtp({
             ...(selectedFormPtp as any),
             lotes: itensProcessados
-              ?.map(item => item?.lote)
+              ?.map(item => item?.lote?.trim())
               ?.filter(Boolean) as string[],
             codigoProdutos: itensProcessados
-              ?.map(item => item?.codigoProdutos)
+              ?.map(item => item?.codigoProdutos?.trim())
               ?.filter(Boolean) as string[],
             qtdCaixasNaoConformes: itensProcessados
-              ?.map(item => item?.qtdCaixasNaoConformes)
+              ?.map(item => item?.qtdCaixasNaoConformes?.trim())
               ?.filter(Boolean) as string[],
             detalheNaoConformidade: itensProcessados
               ?.map(item => item?.detalheNaoConformidade)

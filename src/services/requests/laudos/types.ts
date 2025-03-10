@@ -47,7 +47,7 @@ export interface EvidenciaPost {
 export interface LaudoCrm {
   form_ptp_id: string;
   id: string;
-  documentoTransporte: string;
+  remessa: string;
   transportador: string;
   placa: string;
   notaFiscal: string;
@@ -71,7 +71,7 @@ export interface LaudoCrmWithAnswer extends LaudoCrm, FormPtpAnswer {
 }
 
 export interface LaudoCrmPost {
-  documentoTransporte: string;
+  remessa: string;
   transportador: string;
   placa: string;
   notaFiscal: string;

@@ -33,7 +33,10 @@ import { Loading } from '@/components/Loading';
 import { SelectWithLabel } from '@/components/SelectWithLabel';
 import { ScrollScreenContainer } from '@/components/ScrollScreenContainer';
 
-import { TipoDivergencia } from '@/services/requests/divergences/types';
+import {
+  DivergenciaPost,
+  TipoDivergencia,
+} from '@/services/requests/divergences/types';
 import { createDivergenceRequest } from '@/services/requests/divergences/utils';
 import { supabase } from '@/lib/supabase';
 import { generateFolderName } from '@/utils/generateFoldername';
@@ -101,6 +104,7 @@ export default function Divergency() {
   const [quantidadeNotaFiscal, setQuantidadeNotaFiscal] = useState('');
   const [up, setUp] = useState('');
   const [cd, setCd] = useState('');
+  const [nota, setNota] = useState('');
 
   const [permission, requestPermission] = useCameraPermissions();
 
@@ -159,7 +163,7 @@ export default function Divergency() {
     setImagesList([]);
     setSkuNotaFiscal('');
     setQuantidadeNotaFiscal('');
-
+    setNota('');
     back();
   }, [back]);
 
@@ -246,7 +250,14 @@ export default function Divergency() {
   }, [permission, requestPermission, imagesList]);
 
   const handleSaveDivergence = useCallback(async () => {
-    if (!sku || !quantidade || !cd || !up || imagesList?.length === 0) {
+    if (
+      !sku ||
+      !nota ||
+      !quantidade ||
+      !cd ||
+      !up ||
+      imagesList?.length === 0
+    ) {
       setIsLoading(false);
       return Alert.alert(
         'Cadastro de Divergência',
@@ -276,7 +287,7 @@ export default function Divergency() {
       quantidadeNotaFiscal,
     );
 
-    const data: any = {
+    const data: DivergenciaPost = {
       tipoDivergencia: divergencyType()?.type!,
       evidencias: [],
       skuFaltandoFisicamente:
@@ -308,7 +319,8 @@ export default function Divergency() {
       proximoPasso,
       upOrigem: up,
       cdOrigem: cd,
-      user_id: user?.id,
+      notaFiscal: nota,
+      user_id: user?.id!,
     };
 
     console.log('data', JSON.stringify(data, null, 2));
@@ -468,6 +480,7 @@ export default function Divergency() {
     supabase,
     up,
     cd,
+    nota,
   ]);
 
   const handleCancel = useCallback(() => {
@@ -626,6 +639,27 @@ export default function Divergency() {
             </Pressable>
           </HStack>
         </VStack>
+
+        <Box mb={1} px={2}>
+          <Text mb={-2} color="gray.750">
+            Nota Fiscal:
+          </Text>
+          <Input
+            w="full"
+            variant="underlined"
+            height={14}
+            size="md"
+            fontSize="md"
+            pb={0}
+            placeholderTextColor="gray.700"
+            value={nota}
+            onChangeText={setNota}
+            _focus={{ borderColor: 'primary.700' }}
+            placeholder=""
+            autoComplete="off"
+            keyboardType="numeric"
+          />
+        </Box>
 
         {divergencyType()?.type === TipoDivergencia.FALTA && (
           <VStack px={2} space={6} pt={2}>
