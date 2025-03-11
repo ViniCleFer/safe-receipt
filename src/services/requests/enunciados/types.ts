@@ -1,6 +1,13 @@
 export enum GrupoEnunciado {
   PALETE = 'PALETE',
   CAIXA_E_FARDO = 'CAIXA_E_FARDO',
+  SEPARACAO_MONTAGEM = 'SEPARACAO_MONTAGEM',
+}
+
+export enum TipoEspecificacao {
+  RECEBIMENTO = 'RECEBIMENTO',
+  SEPARACAO_MONTAGEM = 'SEPARACAO_MONTAGEM',
+  ARMAZENAMENTO = 'ARMAZENAMENTO',
 }
 
 export interface Enunciado {
@@ -11,6 +18,7 @@ export interface Enunciado {
   grupo: GrupoEnunciado;
   isChecked: boolean;
   opcoesNaoConformidades: string[];
+  tipoEspecificacao: TipoEspecificacao;
   created_at: Date;
   updated_at: Date;
   canceled_at: Date | null;

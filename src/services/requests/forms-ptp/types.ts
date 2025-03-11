@@ -1,3 +1,5 @@
+import { TipoEspecificacao } from '../enunciados/types';
+
 export enum FormPtpStatus {
   EM_ANDAMENTO = 'EM_ANDAMENTO',
   FINALIZADO = 'FINALIZADO',
@@ -15,6 +17,7 @@ export interface FormPtp {
   notaFiscal: string;
   opcaoUp: string;
   qtdAnalisada: number;
+  tipoEspecificacao: TipoEspecificacao;
   tipoCodigoProduto: TipoCodigoProduto;
   status: FormPtpStatus;
   created_at: Date;
@@ -30,6 +33,7 @@ export interface FormPtpPost {
   status: FormPtpStatus;
   qtdAnalisada: number;
   tipoCodigoProduto: TipoCodigoProduto;
+  tipoEspecificacao: TipoEspecificacao;
 }
 
 export interface FormPtpPut extends FormPtpPost {

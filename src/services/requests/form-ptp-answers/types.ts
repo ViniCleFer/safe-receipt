@@ -1,3 +1,5 @@
+import { TipoEspecificacao } from '../enunciados/types';
+
 export enum Enunciado {
   NUM_CAMADAS = 'NUM_CAMADAS',
   LIMPEZA = 'LIMPEZA',
@@ -19,6 +21,7 @@ export interface FormPtpAnswer {
   qtdPalletsNaoConforme: number;
   qtdCaixasNaoConforme: number;
   necessitaCrm: boolean;
+  tipoEspecificacao: TipoEspecificacao;
   created_at: Date;
   updated_at: Date;
   canceled_at: Date | null;
@@ -34,6 +37,7 @@ export interface FormPtpAnswerPost {
   qtdPalletsNaoConforme: number;
   qtdCaixasNaoConforme: number;
   necessitaCrm: boolean;
+  tipoEspecificacao: TipoEspecificacao;
 }
 
 export interface FormPtpAnswerPut extends FormPtpAnswerPost {

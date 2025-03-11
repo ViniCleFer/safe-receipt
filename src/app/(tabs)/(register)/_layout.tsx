@@ -23,6 +23,7 @@ export default function MainLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="divergency/[type]" />
+      <Stack.Screen name="specification/[type]" />
       <Stack.Screen name="enunciado/[id]" />
       <Stack.Screen name="form-ptp" />
       <Stack.Screen name="laudo-crm/[id]" />

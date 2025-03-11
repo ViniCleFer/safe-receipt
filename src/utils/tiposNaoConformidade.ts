@@ -36,6 +36,10 @@ export const tiposNaoConformidade = [
     value: 'PALLET_TOMBADO',
   },
   {
+    label: 'PALLET DESCARTAVEL',
+    value: 'PALLET_DESCARTAVEL',
+  },
+  {
     label: 'CAIXA SEM ETIQUETA',
     value: 'CAIXA_SEM_ETIQUETA',
   },
@@ -50,5 +54,21 @@ export const tiposNaoConformidade = [
   {
     label: 'PRODUTO EM SHELF LIFE',
     value: 'PRODUTO_EM_SHELF_LIFE',
+  },
+  {
+    label: 'ESTRUTURA SEM IDENTIFICAÇÃO',
+    value: 'ESTRUTURA_SEM_IDENTIFICACAO',
+  },
+  {
+    label: 'ESTRUTURA AMASSADA',
+    value: 'ESTRUTURA_AMASSADA',
+  },
+  {
+    label: 'LONGARINA AMASSADA',
+    value: 'LONGARINA_AMASSADA',
+  },
+  {
+    label: 'SEM ABRIGO DE SOL, EXPOSTO AO TEMPO',
+    value: 'SEM_ABRIGO_DE_SOL_EXPOSTO_AO_TEMPO',
   },
 ];

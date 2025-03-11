@@ -1,59 +1,86 @@
-import React, { Fragment, useCallback, useEffect, useState } from 'react';
+import React, {
+  Fragment,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import DateTimePicker, {
-  type DateTimePickerEvent,
-} from '@react-native-community/datetimepicker';
-import { StackActions } from '@react-navigation/native';
+import {
+  type CameraPictureOptions,
+  CameraView,
+  useCameraPermissions,
+} from 'expo-camera';
+import * as ImagePicker from 'expo-image-picker';
+import mime from 'mime';
 import {
   Box,
   HStack,
   Icon,
+  Image,
   Input,
   Pressable,
   Radio,
   Select,
   Text,
   useTheme,
+  View,
   VStack,
 } from 'native-base';
-import * as z from 'zod';
-import dayjs from 'dayjs';
+import { Alert, StyleSheet, TouchableOpacity } from 'react-native';
 import { shade } from 'polished';
-import { Alert } from 'react-native';
-import { router, useFocusEffect, useNavigationContainerRef } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import {
+  router,
+  useFocusEffect,
+  useLocalSearchParams,
+  useNavigationContainerRef,
+} from 'expo-router';
+import { decode } from 'base64-arraybuffer';
 import { mask } from 'remask';
+import { StackActions } from '@react-navigation/native';
+import dayjs from 'dayjs';
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
 
 import { Button } from '@/components/Button';
 import { Loading } from '@/components/Loading';
-import { RadioInput } from '@/components/RadioInput';
+import { InputNormal } from '@/components/InputNormal';
 import { SelectWithLabel } from '@/components/SelectWithLabel';
-import { InputWithLabelControlled } from '@/components/InputControlled';
 import { ScrollScreenContainer } from '@/components/ScrollScreenContainer';
-import { SelectWithLabelControlled } from '@/components/SelectWithLabelControlled';
-import { ConformidadesCheckboxControlled } from '@/components/ConformidadesCheckboxControlled';
-
-import { listaUPsOrigem } from '@/utils/listaUPs';
-import { formatEnunciadoList } from '@/utils/formatEnunciadoList';
 
 import {
-  GrupoEnunciado,
+  DivergenciaPost,
+  TipoDivergencia,
+} from '@/services/requests/divergences/types';
+import { createDivergenceRequest } from '@/services/requests/divergences/utils';
+import { supabase } from '@/lib/supabase';
+import { generateFolderName } from '@/utils/generateFoldername';
+import useAuthStore from '@/store/auth';
+import { getNextStepsByDivergencyType } from '@/utils/getNextStepsByDivergencyType';
+import { listaCDsOrigem, listaUPsOrigem } from '@/utils/listaUPs';
+import useFormPtpStore from '@/store/forms-ptp';
+import { RadioInput } from '@/components/RadioInput';
+import { InputWithLabelControlled } from '@/components/InputControlled';
+import {
   EnunciadoToList,
-  Enunciado,
+  GrupoEnunciado,
   TipoEspecificacao,
 } from '@/services/requests/enunciados/types';
+import { ConformidadesCheckboxControlled } from '@/components/ConformidadesCheckboxControlled';
+import { SelectWithLabelControlled } from '@/components/SelectWithLabelControlled';
 import {
   FormPtpStatus,
   TipoCodigoProduto,
 } from '@/services/requests/forms-ptp/types';
-import { createFormPtpRequest } from '@/services/requests/forms-ptp/utils';
 import { getEnunciadosRequest } from '@/services/requests/enunciados/utils';
+import { formatEnunciadoList } from '@/utils/formatEnunciadoList';
+import { createFormPtpRequest } from '@/services/requests/forms-ptp/utils';
 import { FormPtpAnswerPost } from '@/services/requests/form-ptp-answers/types';
 import { createFormPtpAnswerRequest } from '@/services/requests/form-ptp-answers/utils';
-
-import useFormPtpStore from '@/store/forms-ptp';
-import { InputNormal } from '@/components/InputNormal';
 
 const formAnswersSchema = z.object({
   respostas: z
@@ -72,7 +99,7 @@ const formAnswersSchema = z.object({
     .nonempty(),
 });
 
-export default function FormPtp() {
+export default function Divergency() {
   const { colors } = useTheme();
   const { back, push, replace } = router;
   const rootNavigation = useNavigationContainerRef();
@@ -80,6 +107,10 @@ export default function FormPtp() {
   const { selectedFormPtp, setSelectedFormPtp } = useFormPtpStore(
     state => state,
   );
+
+  const { type } = useLocalSearchParams<{ type: string }>();
+
+  const user = useAuthStore(state => state.user);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingEnunciados, setIsLoadingEnunciados] = useState(false);
@@ -104,7 +135,7 @@ export default function FormPtp() {
   >([]);
   const [showEnunciados, setShowEnunciados] = useState(false);
 
-  const { control, handleSubmit, watch, getValues, setValue } = useForm({
+  const { control, watch, getValues, setValue } = useForm({
     resolver: zodResolver(formAnswersSchema),
     defaultValues: {
       respostas: enunciadosList?.flatMap(grupo =>
@@ -122,15 +153,41 @@ export default function FormPtp() {
     },
   });
 
+  const getSpecificationType = () => {
+    if (type && type === 'armazenamento') {
+      return {
+        type: TipoEspecificacao.ARMAZENAMENTO,
+        text: 'Armazenamento',
+      };
+    }
+    if (type && type === 'recebimento') {
+      return {
+        type: TipoEspecificacao.RECEBIMENTO,
+        text: 'Recebimento',
+      };
+    }
+    if (type && type === 'separacao') {
+      return {
+        type: TipoEspecificacao.SEPARACAO_MONTAGEM,
+        text: 'Separação e Montagem',
+      };
+    }
+    return {
+      type: TipoEspecificacao.RECEBIMENTO,
+      text: 'Recebimento',
+    };
+  };
+
   async function loadEnunciados() {
     // setIsLoading(true);
     // try {
     const response = await getEnunciadosRequest();
 
     console.log(
-      'getActionsRequest response',
+      'getEnunciadosRequest response',
       JSON.stringify(response, null, 2),
     );
+    console.log('getEnunciadosRequest type', getSpecificationType().type);
 
     if (!response) {
       setIsLoading(false);
@@ -141,7 +198,7 @@ export default function FormPtp() {
     // if (response?.status === 200 && response?.data?.enunciadosCount > 0) {
     const enunciadosActiveFormatted = formatEnunciadoList(
       response,
-      TipoEspecificacao.RECEBIMENTO,
+      getSpecificationType().type,
     );
 
     console.log(
@@ -161,8 +218,11 @@ export default function FormPtp() {
 
   useFocusEffect(
     useCallback(() => {
-      loadEnunciados();
-    }, []),
+      if (type) {
+        console.log('type', type);
+        loadEnunciados();
+      }
+    }, [type]),
   );
 
   const onChange = (
@@ -196,7 +256,14 @@ export default function FormPtp() {
   const handleSaveInitialFormPtp = useCallback(async () => {
     setIsLoading(true);
 
-    if (!dataIdentificacao || !conferente || !nota || !up || !qtdAnalisada) {
+    if (
+      !type ||
+      !dataIdentificacao ||
+      !conferente ||
+      !nota ||
+      !up ||
+      !qtdAnalisada
+    ) {
       Alert.alert(
         'Salvar PTP',
         'Por favor, preencha todos os campos para responder as perguntas.',
@@ -213,7 +280,7 @@ export default function FormPtp() {
       status: FormPtpStatus.EM_ANDAMENTO,
       qtdAnalisada: Number(qtdAnalisada),
       tipoCodigoProduto: tipoCodigoProduto,
-      tipoEspecificacao: TipoEspecificacao.RECEBIMENTO,
+      tipoEspecificacao: getSpecificationType()?.type!,
     };
 
     // console.log('formPtp', JSON.stringify(data, null, 2));
@@ -244,6 +311,8 @@ export default function FormPtp() {
     qtdAnalisada,
     tipoCodigoProduto,
     setSelectedFormPtp,
+    type,
+    getSpecificationType,
   ]);
 
   const handleSaveFormPtpAnswers = useCallback(async () => {
@@ -301,7 +370,7 @@ export default function FormPtp() {
             ? Number(resposta?.qtdCaixasNaoConforme)
             : 0,
           necessitaCrm: haNaoConformidade,
-          tipoEspecificacao: TipoEspecificacao.RECEBIMENTO,
+          tipoEspecificacao: getSpecificationType()?.type!,
         };
 
         console.log('data', JSON.stringify(data, null, 2));
@@ -353,7 +422,10 @@ export default function FormPtp() {
 
         console.log('haNaoConformidadeQuestionSix', haNaoConformidade);
 
-        if (haNaoConformidade) {
+        if (
+          haNaoConformidade &&
+          getSpecificationType()?.type === TipoEspecificacao.RECEBIMENTO
+        ) {
           setSelectedFormPtp({
             ...(selectedFormPtp as any),
             lotes: itensProcessados
@@ -428,6 +500,8 @@ export default function FormPtp() {
     codProduto,
     handleClear,
     rootNavigation,
+    type,
+    getSpecificationType,
   ]);
 
   const respostas = watch('respostas');
@@ -687,7 +761,7 @@ export default function FormPtp() {
                             fontSize="2xl"
                             fontWeight="bold"
                           >
-                            Enunciados - {enunciado?.grupoFormatado}
+                            {enunciado?.grupoFormatado}
                           </Text>
                           {enunciado?.enunciados?.map(item => {
                             const index = item?.index;
