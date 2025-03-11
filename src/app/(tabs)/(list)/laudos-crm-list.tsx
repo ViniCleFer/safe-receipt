@@ -88,7 +88,7 @@ export default function LuadoCrmList() {
 
             if (lotes?.length > 0) {
               lotesFormatted = lotes
-                .map((lote: string) => '-' + lote)
+                .map((lote: string) => '- ' + lote?.trim())
                 .join('\n');
             } else {
               lotesFormatted = 'Sem lotes cadastrados';
@@ -98,7 +98,7 @@ export default function LuadoCrmList() {
 
             if (codigosProdutos?.length > 0) {
               codigosProdutosFormatted = codigosProdutos
-                .map((codigoProduto: string) => '-' + codigoProduto)
+                .map((codigoProduto: string) => '- ' + codigoProduto?.trim())
                 .join('\n');
             } else {
               codigosProdutosFormatted = 'Sem códigos de produtos cadastrados';
@@ -108,7 +108,10 @@ export default function LuadoCrmList() {
 
             if (qtdCaixasNaoConformes?.length > 0) {
               qtdCaixasNaoConformesFormatted = qtdCaixasNaoConformes
-                .map((codigoProduto: string) => '-' + codigoProduto)
+                .map(
+                  (qtdCaixasNaoConforme: string) =>
+                    '- ' + qtdCaixasNaoConforme?.trim(),
+                )
                 .join('\n');
             } else {
               qtdCaixasNaoConformesFormatted =

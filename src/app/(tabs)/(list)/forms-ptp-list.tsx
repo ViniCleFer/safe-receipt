@@ -10,6 +10,7 @@ import { ScrollScreenContainer } from '@/components/ScrollScreenContainer';
 import { type FormPtp } from '@/services/requests/forms-ptp/types';
 import { getFormsPtpRequest } from '@/services/requests/forms-ptp/utils';
 import { listaUPsOrigem } from '@/utils/listaUPs';
+import { tiposEspecificacao } from '@/utils/tiposEspecificacao';
 
 export default function FormsPtpList() {
   const { colors } = useTheme();
@@ -22,15 +23,15 @@ export default function FormsPtpList() {
     try {
       const response = await getFormsPtpRequest();
 
-      console.log(
-        'getFormsPtpRequest response',
-        JSON.stringify(response?.data, null, 2),
-      );
+      // console.log(
+      //   'getFormsPtpRequest response',
+      //   JSON.stringify(response?.data, null, 2),
+      // );
 
       if (response?.status === 200) {
         const formsPtp = response?.data;
 
-        console.log('formsPtp', formsPtp);
+        // console.log('formsPtp', formsPtp);
 
         setFormsPtpList([...formsPtp]);
       }
@@ -116,6 +117,16 @@ export default function FormsPtpList() {
                     {
                       listaUPsOrigem?.find(u => u?.value === item?.opcaoUp)
                         ?.label
+                    }
+                  </Text>
+                </VStack>
+                <VStack pl={2} mb={4}>
+                  <Text color="gray.750">Tipo</Text>
+                  <Text color="black" fontWeight="semibold">
+                    {
+                      tiposEspecificacao?.find(
+                        u => u?.value === item?.tipoEspecificacao,
+                      )?.label
                     }
                   </Text>
                 </VStack>
