@@ -22,6 +22,10 @@ export default function SelectFormType() {
   //   navigate('/laudo-crm/58d40fbc-2848-4de7-83c0-a38e987d3313');
   // }, [navigate]);
 
+  const handleCreateCartaControle = useCallback(() => {
+    navigate('/carta-controle');
+  }, [navigate]);
+
   return (
     <ScrollScreenContainer subtitle="Selecione o tipo de formulário para cadastro">
       <Pressable onPress={handleCreateFormPtp}>
@@ -83,6 +87,27 @@ export default function SelectFormType() {
             />
             <Text color="gray.700" fontSize="lg">
               Divergência
+            </Text>
+          </HStack>
+        </Card>
+      </Pressable>
+      <Pressable onPress={handleCreateCartaControle}>
+        <Card
+          bg="white"
+          mt="8px"
+          mb="12px"
+          h="80px"
+          justifyContent="center"
+          p={3}
+        >
+          <HStack bg="white" alignItems="center" space={3}>
+            <MaterialIcons
+              name="post-add"
+              size={30}
+              color={colors.primary[700]}
+            />
+            <Text color="gray.700" fontSize="lg">
+              Carta Controle
             </Text>
           </HStack>
         </Card>

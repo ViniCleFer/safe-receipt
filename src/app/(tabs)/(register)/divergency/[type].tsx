@@ -27,6 +27,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { router, useLocalSearchParams } from 'expo-router';
 import { decode } from 'base64-arraybuffer';
+import { v4 as uuidv4 } from 'uuid';
 
 import { Button } from '@/components/Button';
 import { Loading } from '@/components/Loading';
@@ -340,18 +341,16 @@ export default function Divergency() {
               return {
                 base64: i?.base64,
                 mimetype: i?.mimetype,
-                filename: i?.filename
-                  ? i?.filename
-                  : 'arquivo ' + new Date().toString() + '.' + extension,
+                filename: `${uuidv4()}.${extension}`,
               };
             })
           : [];
 
       if (evidencias?.length > 0) {
         const folderName = generateFolderName(
-          false,
-          null,
+          'divergencia',
           response?.data[0]?.id,
+          null,
         );
 
         let evidenciasIds: string[] = [];
@@ -481,6 +480,7 @@ export default function Divergency() {
     up,
     cd,
     nota,
+    uuidv4,
   ]);
 
   const handleCancel = useCallback(() => {

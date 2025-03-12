@@ -23,6 +23,10 @@ export default function SelectFormType() {
     navigate('/divergencies-list');
   }, [navigate]);
 
+  const handleListCartaControle = useCallback(() => {
+    navigate('/cartas-controle-list');
+  }, [navigate]);
+
   return (
     <ScrollScreenContainer subtitle="Selecione o evento para listagem">
       <Pressable onPress={handleListFormPtp}>
@@ -84,6 +88,27 @@ export default function SelectFormType() {
             />
             <Text color="gray.700" fontSize="lg">
               Divergência
+            </Text>
+          </HStack>
+        </Card>
+      </Pressable>
+      <Pressable onPress={handleListCartaControle}>
+        <Card
+          bg="white"
+          mt="8px"
+          mb="12px"
+          h="80px"
+          justifyContent="center"
+          p={3}
+        >
+          <HStack bg="white" alignItems="center" space={3}>
+            <MaterialIcons
+              name="list-alt"
+              size={30}
+              color={colors.primary[700]}
+            />
+            <Text color="gray.700" fontSize="lg">
+              Carta Controle
             </Text>
           </HStack>
         </Card>

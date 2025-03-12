@@ -16,7 +16,6 @@ import { Alert, Platform, useWindowDimensions } from 'react-native';
 // import LogoYpe from '@/assets/ype.png';
 import useAuthStore from '@/store/auth';
 import { supabase } from '@/lib/supabase';
-import { User } from '@supabase/supabase-js';
 import { useRouter } from 'expo-router';
 // import useFactoryPlantStore from '../../store/factories';
 
@@ -154,18 +153,20 @@ export const Header = ({ ...rest }: HeaderProps) => {
 
         {hasNavigation ? (
           <Text fontSize="xl" fontWeight="medium" textTransform="capitalize">
-            {/* {user?.user_metadata?.name?.split(' ')?.length > 2
-              ? user?.user_metadata?.name?.split(' ')[0]
-              : user?.user_metadata?.name} */}
-            Admin
+            {user?.user_metadata?.name
+              ? user?.user_metadata?.name?.split(' ')?.length > 2
+                ? user?.user_metadata?.name?.split(' ')[0]
+                : user?.user_metadata?.name
+              : 'Admin'}
           </Text>
         ) : (
           <VStack width="75%">
             <Text fontSize="xl" fontWeight="medium" textTransform="capitalize">
-              {/* {user?.user_metadata?.name?.split(' ')?.length > 2
-              ? user?.user_metadata?.name?.split(' ')[0]
-              : user?.user_metadata?.name} */}
-              Admin
+              {user?.user_metadata?.name
+                ? user?.user_metadata?.name?.split(' ')?.length > 2
+                  ? user?.user_metadata?.name?.split(' ')[0]
+                  : user?.user_metadata?.name
+                : 'Admin'}
             </Text>
           </VStack>
         )}

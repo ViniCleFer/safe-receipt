@@ -35,6 +35,7 @@ import {
 } from 'expo-router';
 import { decode } from 'base64-arraybuffer';
 import { mask } from 'remask';
+import { v4 as uuidv4 } from 'uuid';
 
 import { Button } from '@/components/Button';
 import { Loading } from '@/components/Loading';
@@ -562,9 +563,7 @@ export default function LaudoCrm() {
                 type: i?.type,
                 base64: i?.base64,
                 mimetype: i?.mimetype,
-                filename: i?.filename
-                  ? i?.filename
-                  : 'arquivo ' + new Date().toString() + '.' + extension,
+                filename: `${uuidv4()}.${extension}`,
               };
             })
           : [];
@@ -574,10 +573,9 @@ export default function LaudoCrm() {
 
         for await (const evidencia of evidencias) {
           const folderName = generateFolderName(
-            true,
+            'laudoCrm',
             response?.data[0]?.id,
             null,
-            evidencia?.type,
           );
           console.log('folderName', folderName);
 
@@ -738,6 +736,7 @@ export default function LaudoCrm() {
     setSelectedFormPtp,
     handleBack,
     haDivergencia,
+    uuidv4,
   ]);
 
   const handleCancel = useCallback(() => {

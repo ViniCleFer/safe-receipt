@@ -1,14 +1,12 @@
 import { TipoEvidencia } from '@/services/requests/laudos/types';
+import { TipoEvidenciaCartaControle } from '@/services/requests/cartas-controle/types';
 
 const bucketName = 'evidencias';
 
 export function generateFolderName(
-  isLaudoCrm: boolean,
-  laudoCrmId?: string | null,
-  divergenciaId?: string | null,
-  tipoEvidencia?: TipoEvidencia | null,
+  initialPath: string, // 'laudoCrm', 'divergencia'
+  entityId: string, // laudoCrmId, divergenciaId, cartaControleId
+  tipoEvidencia?: TipoEvidencia | TipoEvidenciaCartaControle | null,
 ): string {
-  return isLaudoCrm
-    ? `${bucketName}/laudoCrm/${laudoCrmId}/${tipoEvidencia}`
-    : `${bucketName}/divergencia/${divergenciaId}`;
+  return `${bucketName}/${initialPath}/${entityId}/${tipoEvidencia}`;
 }
