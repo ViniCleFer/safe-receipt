@@ -30,7 +30,7 @@ export default function SelectDivergencyType() {
         >
           <HStack bg="white" alignItems="center" space={3}>
             <MaterialIcons
-              name="warning"
+              name="storage"
               size={30}
               color={colors.primary[700]}
             />
@@ -51,7 +51,7 @@ export default function SelectDivergencyType() {
         >
           <HStack bg="white" alignItems="center" space={3}>
             <MaterialIcons
-              name="warning"
+              name="receipt"
               size={30}
               color={colors.primary[700]}
             />
@@ -72,7 +72,7 @@ export default function SelectDivergencyType() {
         >
           <HStack bg="white" alignItems="center" space={3}>
             <MaterialIcons
-              name="warning"
+              name="dataset"
               size={30}
               color={colors.primary[700]}
             />
