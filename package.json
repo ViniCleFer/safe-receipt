@@ -1,7 +1,7 @@
 {
   "name": "safe-receipt",
   "main": "expo-router/entry",
-  "version": "1.0.18",
+  "version": "1.0.20",
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
