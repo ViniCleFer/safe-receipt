@@ -31,9 +31,20 @@ export default function FormsPtpList() {
       if (response?.status === 200) {
         const formsPtp = response?.data;
 
+        const formsPtpFormatted = formsPtp.map(item => {
+          return {
+            ...item,
+            notaFiscal: item?.notaFiscal || 'N/A',
+            opcaoUp:
+              listaUPsOrigem?.find(u => u?.value === item?.opcaoUp)?.label ||
+              'N/A',
+            dataExecucao: dayjs(item?.dataExecucao).format('DD/MM/YYYY'),
+          };
+        });
+
         // console.log('formsPtp', formsPtp);
 
-        setFormsPtpList([...formsPtp]);
+        setFormsPtpList([...formsPtpFormatted]);
       }
     } catch (error) {
       console.error('Error Home loadFormsPtp => ', error);
@@ -86,7 +97,7 @@ export default function FormsPtpList() {
                         Data do recebimento
                       </Text>
                       <Text color="black" fontWeight="semibold">
-                        {dayjs(item?.dataExecucao).format('DD/MM/YYYY')}
+                        {item?.dataExecucao as string}
                       </Text>
                     </VStack>
                   </HStack>
@@ -100,7 +111,7 @@ export default function FormsPtpList() {
                 </HStack>
 
                 <VStack pl={2} mb={4}>
-                  <Text color="gray.750">Conferente</Text>
+                  <Text color="gray.750">Conferente/Técnico</Text>
                   <Text color="black" fontWeight="semibold">
                     {item?.conferente}
                   </Text>
@@ -114,10 +125,7 @@ export default function FormsPtpList() {
                 <VStack pl={2} mb={4}>
                   <Text color="gray.750">UP Recebimento</Text>
                   <Text color="black" fontWeight="semibold">
-                    {
-                      listaUPsOrigem?.find(u => u?.value === item?.opcaoUp)
-                        ?.label
-                    }
+                    {item?.opcaoUp}
                   </Text>
                 </VStack>
                 <VStack pl={2} mb={4}>

@@ -42,8 +42,8 @@ export default function SignIn() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [closedEyes, setClosedEyes] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('vini@teste.com');
+  const [password, setPassword] = useState('#opssh!');
 
   const {
     formState: { errors },

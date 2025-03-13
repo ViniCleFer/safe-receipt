@@ -221,7 +221,7 @@ export default function LuadoCrmList() {
                   </Text>
                 </VStack>
                 <VStack pl={2} mb={4}>
-                  <Text color="gray.750">Conferente</Text>
+                  <Text color="gray.750">Conferente/Técnico</Text>
                   <Text color="black" fontWeight="semibold">
                     {item?.conferente}
                   </Text>

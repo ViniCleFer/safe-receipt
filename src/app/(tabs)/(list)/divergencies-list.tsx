@@ -68,8 +68,8 @@ export default function DivergenciesList() {
               ...divergencias,
               {
                 ...divergencia,
-                upOrigem: upOrigem || 'Sem UP de Origem',
-                cdOrigem: cdOrigem || 'Sem CD de Origem',
+                upOrigem: upOrigem || 'N/A',
+                cdOrigem: cdOrigem || 'N/A',
                 evidencias: [],
                 // evidencias: [...evidenciasDownload],
               },

@@ -563,7 +563,9 @@ export default function LaudoCrm() {
                 type: i?.type,
                 base64: i?.base64,
                 mimetype: i?.mimetype,
-                filename: `${uuidv4()}.${extension}`,
+                filename: `${dayjs().format(
+                  'DD/MM/YYYY[T]HH:mm:ss',
+                )}.${extension}`,
               };
             })
           : [];
@@ -1321,7 +1323,7 @@ export default function LaudoCrm() {
 
           <Box mb={1}>
             <Text mb={-2} color="gray.750">
-              Conferente:
+              Conferente/Técnico:
             </Text>
             <Input
               w="full"

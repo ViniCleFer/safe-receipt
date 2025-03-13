@@ -44,6 +44,7 @@ import { generateFolderName } from '@/utils/generateFoldername';
 import useAuthStore from '@/store/auth';
 import { getNextStepsByDivergencyType } from '@/utils/getNextStepsByDivergencyType';
 import { listaCDsOrigem, listaUPsOrigem } from '@/utils/listaUPs';
+import dayjs from 'dayjs';
 
 const styles = StyleSheet.create({
   container: {
@@ -341,7 +342,9 @@ export default function Divergency() {
               return {
                 base64: i?.base64,
                 mimetype: i?.mimetype,
-                filename: `${uuidv4()}.${extension}`,
+                filename: `${dayjs().format(
+                  'DD/MM/YYYY[T]HH:mm:ss',
+                )}.${extension}`,
               };
             })
           : [];
@@ -658,6 +661,7 @@ export default function Divergency() {
             placeholder=""
             autoComplete="off"
             keyboardType="numeric"
+            maxLength={10}
           />
         </Box>
 

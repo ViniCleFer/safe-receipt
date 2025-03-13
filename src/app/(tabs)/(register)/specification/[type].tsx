@@ -256,29 +256,51 @@ export default function Divergency() {
   const handleSaveInitialFormPtp = useCallback(async () => {
     setIsLoading(true);
 
-    if (
-      !type ||
-      !dataIdentificacao ||
-      !conferente ||
-      !nota ||
-      !up ||
-      !qtdAnalisada
-    ) {
-      Alert.alert(
-        'Salvar PTP',
-        'Por favor, preencha todos os campos para responder as perguntas.',
-      );
-      setIsLoading(false);
-      return;
+    if (getSpecificationType()?.type === TipoEspecificacao.RECEBIMENTO) {
+      if (
+        !type ||
+        !dataIdentificacao ||
+        !conferente ||
+        !nota ||
+        !up ||
+        !qtdAnalisada
+      ) {
+        Alert.alert(
+          'Salvar PTP',
+          'Por favor, preencha todos os campos para responder as perguntas.',
+        );
+        setIsLoading(false);
+        return;
+      }
+    }
+    if (getSpecificationType()?.type === TipoEspecificacao.SEPARACAO_MONTAGEM) {
+      if (!type || !dataIdentificacao || !conferente || !nota) {
+        Alert.alert(
+          'Salvar PTP',
+          'Por favor, preencha todos os campos para responder as perguntas.',
+        );
+        setIsLoading(false);
+        return;
+      }
+    }
+    if (getSpecificationType()?.type === TipoEspecificacao.ARMAZENAMENTO) {
+      if (!type || !dataIdentificacao || !conferente) {
+        Alert.alert(
+          'Salvar PTP',
+          'Por favor, preencha todos os campos para responder as perguntas.',
+        );
+        setIsLoading(false);
+        return;
+      }
     }
 
     const data = {
       dataExecucao: dataIdentificacao,
       conferente,
-      notaFiscal: nota,
-      opcaoUp: up,
+      notaFiscal: nota ? nota : null,
+      opcaoUp: up ? up : null,
       status: FormPtpStatus.EM_ANDAMENTO,
-      qtdAnalisada: Number(qtdAnalisada),
+      qtdAnalisada: qtdAnalisada ? Number(qtdAnalisada) : null,
       tipoCodigoProduto: tipoCodigoProduto,
       tipoEspecificacao: getSpecificationType()?.type!,
     };
@@ -362,12 +384,20 @@ export default function Divergency() {
               ? detalheNaoConformidade
               : resposta?.detalheNaoConformidade || []
             : [],
-          lote: haNaoConformidade ? resposta?.lote : null,
+          lote: haNaoConformidade
+            ? resposta?.lote
+              ? resposta?.lote
+              : null
+            : null,
           qtdPalletsNaoConforme: haNaoConformidade
-            ? Number(resposta?.qtdPalletsNaoConforme)
+            ? resposta?.qtdPalletsNaoConforme
+              ? Number(resposta?.qtdPalletsNaoConforme)
+              : 0
             : 0,
           qtdCaixasNaoConforme: haNaoConformidade
-            ? Number(resposta?.qtdCaixasNaoConforme)
+            ? resposta?.qtdCaixasNaoConforme
+              ? Number(resposta?.qtdCaixasNaoConforme)
+              : 0
             : 0,
           necessitaCrm: haNaoConformidade,
           tipoEspecificacao: getSpecificationType()?.type!,
@@ -588,7 +618,7 @@ export default function Divergency() {
 
           <Box mb={1}>
             <Text mb={-2} color="gray.750">
-              Conferente:
+              Conferente/Técnico:
             </Text>
 
             <Input
@@ -607,51 +637,58 @@ export default function Divergency() {
             />
           </Box>
 
-          <Box mb={1}>
-            <Text mb={-2} color="gray.750">
-              Nota Fiscal:
-            </Text>
-            <Input
-              w="full"
-              variant="underlined"
-              height={14}
-              size="md"
-              fontSize="md"
-              pb={0}
-              placeholderTextColor="gray.700"
-              value={nota}
-              onChangeText={setNota}
-              _focus={{ borderColor: 'primary.700' }}
-              placeholder=""
-              isDisabled={showEnunciados}
-              autoComplete="off"
-              keyboardType="numeric"
-            />
-          </Box>
-
-          <SelectWithLabel
-            label="UP de Origem"
-            selectedValue={up}
-            onValueChange={setUp}
-            options={listaUPsOrigem?.map(s => (
-              <Select.Item key={s?.value} label={s?.label} value={s?.value} />
-            ))}
-            isDisabled={showEnunciados}
-          />
-
-          <SelectWithLabel
-            label="Quantidade analisada"
-            selectedValue={qtdAnalisada}
-            onValueChange={setQtdAnalisada}
-            options={Array.from({ length: 30 })?.map((_, index) => (
-              <Select.Item
-                key={String(index + 1)}
-                label={String(index + 1)}
-                value={String(index + 1)}
+          {getSpecificationType()?.type !== TipoEspecificacao.ARMAZENAMENTO && (
+            <Box mb={1}>
+              <Text mb={-2} color="gray.750">
+                Nota Fiscal:
+              </Text>
+              <Input
+                w="full"
+                variant="underlined"
+                height={14}
+                size="md"
+                fontSize="md"
+                pb={0}
+                placeholderTextColor="gray.700"
+                value={nota}
+                onChangeText={setNota}
+                _focus={{ borderColor: 'primary.700' }}
+                placeholder=""
+                isDisabled={showEnunciados}
+                autoComplete="off"
+                keyboardType="numeric"
+                maxLength={10}
               />
-            ))}
-            isDisabled={showEnunciados}
-          />
+            </Box>
+          )}
+
+          {getSpecificationType()?.type === TipoEspecificacao.RECEBIMENTO && (
+            <SelectWithLabel
+              label="UP de Origem"
+              selectedValue={up}
+              onValueChange={setUp}
+              options={listaUPsOrigem?.map(s => (
+                <Select.Item key={s?.value} label={s?.label} value={s?.value} />
+              ))}
+              isDisabled={showEnunciados}
+            />
+          )}
+
+          {getSpecificationType()?.type === TipoEspecificacao.RECEBIMENTO && (
+            <SelectWithLabel
+              label="Quantidade analisada"
+              selectedValue={qtdAnalisada}
+              onValueChange={setQtdAnalisada}
+              options={Array.from({ length: 30 })?.map((_, index) => (
+                <Select.Item
+                  key={String(index + 1)}
+                  label={String(index + 1)}
+                  value={String(index + 1)}
+                />
+              ))}
+              isDisabled={showEnunciados}
+            />
+          )}
 
           <Box mb={1} width="100%">
             <Text mb={3} color="gray.750">
@@ -829,19 +866,19 @@ export default function Divergency() {
                                 {respostas[index]?.naoConformidade ===
                                   'sim' && (
                                   <>
-                                    <InputWithLabelControlled
-                                      label="Lote"
-                                      control={control}
-                                      index={index}
-                                      name="lote"
-                                      keyboardType="numeric"
-                                      autoCorrect={false}
-                                      maxLength={10}
-                                    />
+                                    {item?.temLote && (
+                                      <InputWithLabelControlled
+                                        label="Lote"
+                                        control={control}
+                                        index={index}
+                                        name="lote"
+                                        keyboardType="numeric"
+                                        autoCorrect={false}
+                                        maxLength={10}
+                                      />
+                                    )}
 
-                                    {item?.posicao === 5 &&
-                                    item?.grupo ===
-                                      GrupoEnunciado.PALETE ? null : (
+                                    {item?.temDetalheNaoConformidade && (
                                       <Box mb={1} width="100%">
                                         <ConformidadesCheckboxControlled
                                           label="Selecione as Não conformidades"
@@ -856,30 +893,34 @@ export default function Divergency() {
                                       </Box>
                                     )}
 
-                                    <SelectWithLabelControlled
-                                      label="Qtde de pallets não conforme?"
-                                      control={control}
-                                      index={index}
-                                      name="qtdPalletsNaoConforme"
-                                      options={Array.from({ length: 30 })?.map(
-                                        (_, index) => (
+                                    {item?.temQtdPalletsNaoConforme && (
+                                      <SelectWithLabelControlled
+                                        label="Qtde de pallets não conforme?"
+                                        control={control}
+                                        index={index}
+                                        name="qtdPalletsNaoConforme"
+                                        options={Array.from({
+                                          length: 30,
+                                        })?.map((_, index) => (
                                           <Select.Item
                                             key={String(index + 1)}
                                             label={String(index + 1)}
                                             value={String(index + 1)}
                                           />
-                                        ),
-                                      )}
-                                    />
+                                        ))}
+                                      />
+                                    )}
 
-                                    <InputWithLabelControlled
-                                      label="Qtde de caixas/fardos não conforme?"
-                                      control={control}
-                                      index={index}
-                                      name="qtdCaixasNaoConforme"
-                                      keyboardType="numeric"
-                                      autoCorrect={false}
-                                    />
+                                    {item?.temQtdCaixasNaoConforme && (
+                                      <InputWithLabelControlled
+                                        label="Qtde de caixas/fardos não conforme?"
+                                        control={control}
+                                        index={index}
+                                        name="qtdCaixasNaoConforme"
+                                        keyboardType="numeric"
+                                        autoCorrect={false}
+                                      />
+                                    )}
                                   </>
                                 )}
                               </VStack>

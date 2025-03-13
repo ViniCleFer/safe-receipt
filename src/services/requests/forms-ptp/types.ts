@@ -12,11 +12,11 @@ export enum TipoCodigoProduto {
 
 export interface FormPtp {
   id: string;
-  dataExecucao: Date;
+  dataExecucao: Date | string;
   conferente: string;
-  notaFiscal: string;
-  opcaoUp: string;
-  qtdAnalisada: number;
+  notaFiscal: string | null;
+  opcaoUp: string | null;
+  qtdAnalisada: number | null;
   tipoEspecificacao: TipoEspecificacao;
   tipoCodigoProduto: TipoCodigoProduto;
   status: FormPtpStatus;
@@ -28,10 +28,10 @@ export interface FormPtp {
 export interface FormPtpPost {
   dataExecucao: Date;
   conferente: string;
-  notaFiscal: string;
-  opcaoUp: string;
+  notaFiscal: string | null;
+  opcaoUp: string | null;
   status: FormPtpStatus;
-  qtdAnalisada: number;
+  qtdAnalisada: number | null;
   tipoCodigoProduto: TipoCodigoProduto;
   tipoEspecificacao: TipoEspecificacao;
 }

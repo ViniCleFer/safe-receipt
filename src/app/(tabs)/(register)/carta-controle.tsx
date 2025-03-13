@@ -27,7 +27,6 @@ import { Alert, StyleSheet, TouchableOpacity } from 'react-native';
 import { shade } from 'polished';
 import { router, useNavigationContainerRef } from 'expo-router';
 import { decode } from 'base64-arraybuffer';
-import { v4 as uuidv4 } from 'uuid';
 
 import { Button } from '@/components/Button';
 import { Loading } from '@/components/Loading';
@@ -42,7 +41,6 @@ import { Turno } from '@/services/requests/laudos/types';
 
 import { supabase } from '@/lib/supabase';
 import useAuthStore from '@/store/auth';
-import { RadioInput } from '@/components/RadioInput';
 
 import { StackActions } from '@react-navigation/native';
 import {
@@ -245,8 +243,73 @@ export default function CartaControle() {
 
   const handleSaveLaudoCrm = useCallback(async () => {
     console.log('imagesList', JSON.stringify(imagesList.length, null, 2));
+    console.log(
+      'imagesList',
+      JSON.stringify(imagesList.map(i => i?.type)?.join(', '), null, 2),
+    );
 
     setIsLoading(true);
+
+    // pelo menos uma imagem de cada tipo de evidencia
+
+    const imagesListCargaDoca = imagesList?.filter(
+      i => i?.type === TipoEvidenciaCartaControle.CARGA_DOCA,
+    );
+    const imagesListOrdemCarregamento = imagesList?.filter(
+      i => i?.type === TipoEvidenciaCartaControle.ORDEM_CARREGAMENTO,
+    );
+    const imagesListInicioCarregamento = imagesList?.filter(
+      i => i?.type === TipoEvidenciaCartaControle.INICIO_CARREGAMENTO,
+    );
+    const imagesListMeioCarregamento = imagesList?.filter(
+      i => i?.type === TipoEvidenciaCartaControle.MEIO_CARREGAMENTO,
+    );
+    const imagesListFimCarregamento = imagesList?.filter(
+      i => i?.type === TipoEvidenciaCartaControle.FINAL_CARREGAMENTO,
+    );
+    const imagesListPlacaVeiculo = imagesList?.filter(
+      i => i?.type === TipoEvidenciaCartaControle.PLACA_VEICULO,
+    );
+
+    console.log(
+      'imagesListCargaDoca',
+      JSON.stringify(imagesListCargaDoca?.length, null, 2),
+    );
+    console.log(
+      'imagesListOrdemCarregamento',
+      JSON.stringify(imagesListOrdemCarregamento?.length, null, 2),
+    );
+    console.log(
+      'imagesListInicioCarregamento',
+      JSON.stringify(imagesListInicioCarregamento?.length, null, 2),
+    );
+    console.log(
+      'imagesListMeioCarregamento',
+      JSON.stringify(imagesListMeioCarregamento?.length, null, 2),
+    );
+    console.log(
+      'imagesListFimCarregamento',
+      JSON.stringify(imagesListFimCarregamento?.length, null, 2),
+    );
+    console.log(
+      'imagesListPlacaVeiculo',
+      JSON.stringify(imagesListPlacaVeiculo?.length, null, 2),
+    );
+
+    if (
+      imagesListCargaDoca?.length === 0 ||
+      imagesListOrdemCarregamento?.length === 0 ||
+      imagesListInicioCarregamento?.length === 0 ||
+      imagesListMeioCarregamento?.length === 0 ||
+      imagesListFimCarregamento?.length === 0 ||
+      imagesListPlacaVeiculo?.length === 0
+    ) {
+      setIsLoading(false);
+      return Alert.alert(
+        'Carta Controle',
+        'Por favor, deve ter pelo menos uma evidência de cada tipo na Carta Controle.',
+      );
+    }
 
     if (
       !dataIdentificacao ||
@@ -255,8 +318,7 @@ export default function CartaControle() {
       !remessa ||
       !conferente ||
       !doca ||
-      !capacidadeVeiculo ||
-      imagesList?.length === 0
+      !capacidadeVeiculo
     ) {
       setIsLoading(false);
       return Alert.alert(
@@ -295,10 +357,14 @@ export default function CartaControle() {
                 type: i?.type,
                 base64: i?.base64,
                 mimetype: i?.mimetype,
-                filename: `${uuidv4()}.${extension}`,
+                filename: `${dayjs().format(
+                  'DD/MM/YYYY[T]HH:mm:ss',
+                )}.${extension}`,
               };
             })
           : [];
+
+      console.log('evidencias', JSON.stringify(evidencias, null, 2));
 
       if (evidencias?.length > 0) {
         let evidenciasIds: string[] = [];
@@ -364,7 +430,7 @@ export default function CartaControle() {
             );
           }
 
-          if (responseUpdate && responseUpdate.status === 200) {
+          if (responseUpdate && responseUpdate?.status === 200) {
             return Alert.alert(
               'Sucesso!',
               'Carta Controle cadastrado com sucesso!',
@@ -402,7 +468,6 @@ export default function CartaControle() {
     observacoes,
     user,
     handleBack,
-    uuidv4,
   ]);
 
   const handleCancel = useCallback(() => {
@@ -580,7 +645,7 @@ export default function CartaControle() {
 
           <Box mb={1}>
             <Text mb={-2} color="gray.750">
-              Conferente:
+              Conferente/Técnico:
             </Text>
             <Input
               w="full"
@@ -672,11 +737,10 @@ export default function CartaControle() {
                           source={{ uri: image?.uri }}
                           alt="image"
                           size="sm"
-                          width="80px"
-                          height="30px"
+                          width="100px"
+                          height="100px"
+                          borderRadius={4}
                         />
-
-                        <Text>{index}</Text>
                       </HStack>
                       <Pressable
                         onPress={() => {
@@ -759,14 +823,13 @@ export default function CartaControle() {
                       <HStack space={2} alignItems="center">
                         <Image
                           key={index}
-                          source={{ uri: image.uri }}
+                          source={{ uri: image?.uri }}
                           alt="image"
                           size="sm"
-                          width="80px"
-                          height="30px"
+                          width="100px"
+                          height="100px"
+                          borderRadius={4}
                         />
-
-                        <Text>{index}</Text>
                       </HStack>
                       <Pressable
                         onPress={() => {
@@ -850,14 +913,13 @@ export default function CartaControle() {
                       <HStack space={2} alignItems="center">
                         <Image
                           key={index}
-                          source={{ uri: image.uri }}
+                          source={{ uri: image?.uri }}
                           alt="image"
                           size="sm"
-                          width="80px"
-                          height="30px"
+                          width="100px"
+                          height="100px"
+                          borderRadius={4}
                         />
-
-                        <Text>{index}</Text>
                       </HStack>
                       <Pressable
                         onPress={() => {
@@ -942,14 +1004,13 @@ export default function CartaControle() {
                       <HStack space={2} alignItems="center">
                         <Image
                           key={index}
-                          source={{ uri: image.uri }}
+                          source={{ uri: image?.uri }}
                           alt="image"
                           size="sm"
-                          width="80px"
-                          height="30px"
+                          width="100px"
+                          height="100px"
+                          borderRadius={4}
                         />
-
-                        <Text>{index}</Text>
                       </HStack>
                       <Pressable
                         onPress={() => {
@@ -1035,14 +1096,13 @@ export default function CartaControle() {
                       <HStack space={2} alignItems="center">
                         <Image
                           key={index}
-                          source={{ uri: image.uri }}
+                          source={{ uri: image?.uri }}
                           alt="image"
                           size="sm"
-                          width="80px"
-                          height="30px"
+                          width="100px"
+                          height="100px"
+                          borderRadius={4}
                         />
-
-                        <Text>{index}</Text>
                       </HStack>
                       <Pressable
                         onPress={() => {
@@ -1126,14 +1186,13 @@ export default function CartaControle() {
                       <HStack space={2} alignItems="center">
                         <Image
                           key={index}
-                          source={{ uri: image.uri }}
+                          source={{ uri: image?.uri }}
                           alt="image"
                           size="sm"
-                          width="80px"
-                          height="30px"
+                          width="100px"
+                          height="100px"
+                          borderRadius={4}
                         />
-
-                        <Text>{index}</Text>
                       </HStack>
                       <Pressable
                         onPress={() => {

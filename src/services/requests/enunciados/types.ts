@@ -19,6 +19,10 @@ export interface Enunciado {
   isChecked: boolean;
   opcoesNaoConformidades: string[];
   tipoEspecificacao: TipoEspecificacao;
+  temLote: boolean;
+  temDetalheNaoConformidade: boolean;
+  temQtdPalletsNaoConforme: boolean;
+  temQtdCaixasNaoConforme: boolean;
   created_at: Date;
   updated_at: Date;
   canceled_at: Date | null;
