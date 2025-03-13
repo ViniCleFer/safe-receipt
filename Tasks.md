@@ -55,18 +55,54 @@ Opções de Não Conformidade precisa vir de acordo com as questões
 
 ### Evidências
 
-[ ] Alinhar as imagens, está tudo colado (Imagem no código)
+[X] Removido as imagens da listagem do APP, pois estava ficando lento para carregar
 
 ### Melhorias Técnicas
 
 [ ] Colocar uma validação geral no momento de salvar as evidências
 [ ] Padronizar o tamanho das imagens com tamanho de 300x300 (L x A)
 [ ] Mostrar qual campo falta preencher na validação
+[ ] Ao clicar tentar escolher imagem ou tirar foto a tela volta para o topo
 
 ## APLICAÇÃO WEB
 
-[ ] Listagem de PTP com as respostas
-[ ] Listagem de Laudo com imagens
-[ ] Listagem de Divergências que forem feitas separado com imagens
-[ ] Possibilidade de exportar um Relatório em Excel sem as imagens
+[X] Listagem de PTP sem as respostas
+[ ] Detalhes de PTP com as respostas
+[ ] Editar PTP com as respostas
+[ ] Excluir PTP com as respostas
+[X] Listagem de Laudo sem imagens
+[ ] Detalhes de Laudo com imagens
+[ ] Editar Laudo
+[ ] Excluir Laudo
+[X] Listagem de Divergências sem imagens
+[ ] Detalhes de Divergências com imagens
+[ ] Editar Divergências
+[ ] Excluir Divergências
+[X] Listagem de Carta Controle sem imagens
+[ ] Detalhes de Carta Controle com imagens
+[ ] Editar Carta Controle
+[ ] Excluir Carta Controle
+[X] Possibilidade de exportar um Relatório em Excel sem as imagens
 [ ] Possibilidade de Gerar um PDF do Laudo com as imagens (Conforme o card do APP)
+
+## Em todos os PTPs
+
+[X] Trocar a label de Conferente para Conferente/Técnico
+[X] Limitar Nota Fiscal em 10 caracteres
+
+## PTP Armazenamento
+
+[X] Remover NF, UP e Qtd Analisada
+
+## Especificação de Armazenamento (Tópico Estrutura Local)
+
+[X] Remover das 2 especificações os campos Lote, Qtd Analisada e Qtd Caixa
+
+## PTP Separação e Montagem
+
+[X] Remover UP e Qtd Analisada
+
+## Carta Controle
+
+[X] Validar pelo menos uma imagem de cada tipo
+[X] Campo observação é opcional
