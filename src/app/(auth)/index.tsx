@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Feather, MaterialIcons } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Box, Icon, Image, Link, Pressable, Text, VStack } from 'native-base';
@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { Alert } from 'react-native';
 import { z } from 'zod';
 import * as Constants from 'expo-constants';
-import { Redirect, router } from 'expo-router';
+import { router } from 'expo-router';
 
 import Logo from '@/assets/icon-vfcode.png';
 
@@ -17,11 +17,6 @@ import useAuthStore from '@/store/auth';
 
 import { supabase } from '@/lib/supabase';
 
-// import { setUserLocalStorage } from '@/services/requests/auth/helpers';
-// import { useAuth } from '@/contexts/AuthContext';
-// import { Session } from '@supabase/supabase-js';
-import { InputNormal } from '@/components/InputNormal';
-
 interface FormData {
   email: string;
   password: string;
@@ -29,8 +24,12 @@ interface FormData {
 
 const formValidation = (): any => {
   return z.object({
-    email: z.string({ required_error: 'O campo RE/E-mail é obrigatório.' }),
-    password: z.string({ required_error: 'O campo senha é obrigatório' }),
+    email: z.string({ required_error: 'O campo E-mail é obrigatório.' }).email({
+      message: 'O campo E-mail é inválido.',
+    }),
+    password: z
+      .string({ required_error: 'O campo senha é obrigatório' })
+      .min(6, 'A senha deve ter no mínimo 6 caracteres'),
   });
 };
 
@@ -42,12 +41,14 @@ export default function SignIn() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [closedEyes, setClosedEyes] = useState(true);
-  const [email, setEmail] = useState('vini@teste.com');
-  const [password, setPassword] = useState('#opssh!');
+  // const [email, setEmail] = useState('vini@teste.com');
+  // const [password, setPassword] = useState('#opssh!');
 
   const {
     formState: { errors },
     setValue,
+    control,
+    handleSubmit,
   } = useForm<FormData>({
     resolver: zodResolver(formValidation()),
     defaultValues: {
@@ -86,8 +87,8 @@ export default function SignIn() {
         error,
         data: { session },
       } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
+        email: formData?.email,
+        password: formData?.password,
       });
 
       if (error) {
@@ -109,8 +110,6 @@ export default function SignIn() {
           refresh_token,
         };
 
-        // await setUserLocalStorage(user);
-        // setAuthenticatedUser(user);
         setUserAuthenticated(user, tokens);
         router.replace('/(tabs)/(list)');
       }
@@ -152,19 +151,21 @@ export default function SignIn() {
         />
       </Box>
 
-      <InputNormal
+      <Input
+        control={control}
+        name="email"
         label="E-MAIL"
         placeholder="Digite seu e-mail"
         autoCapitalize="none"
         autoCorrect={false}
         keyboardType="email-address"
-        error={errors.email?.message}
+        error={errors?.email}
         _focus={{ borderColor: 'primary.700' }}
-        value={email}
-        onChangeText={t => {
-          setEmail(t);
-          setValue('email', t);
-        }}
+        // value={email}
+        // onChangeText={t => {
+        //   setEmail(t);
+        //   setValue('email', t);
+        // }}
       />
       {/* 
       <Input
@@ -178,18 +179,20 @@ export default function SignIn() {
         error={errors.email}
         _focus={{ borderColor: 'primary.700' }}
       /> */}
-      <InputNormal
+      <Input
         label="SENHA"
-        error={errors.password?.message}
+        name="password"
+        control={control}
+        error={errors?.password}
         placeholder="Digite sua senha"
         secureTextEntry={closedEyes}
         autoComplete="off"
         _focus={{ borderColor: 'primary.700' }}
-        value={password}
-        onChangeText={t => {
-          setPassword(t);
-          setValue('password', t);
-        }}
+        // value={password}
+        // onChangeText={t => {
+        //   setPassword(t);
+        //   setValue('password', t);
+        // }}
         InputRightElement={
           <Pressable
             display="center"
@@ -249,7 +252,7 @@ export default function SignIn() {
         _text={{
           color: 'white',
         }}
-        onPress={() => handleLogin({ email, password })}
+        onPress={handleSubmit(handleLogin)}
         isLoading={isLoading}
         disabled={isLoading}
         leftIcon={<Icon as={MaterialIcons} name="login" size="md" />}
