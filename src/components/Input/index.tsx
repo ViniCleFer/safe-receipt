@@ -54,7 +54,7 @@ export function Input({
 
             {error && (
               <Text color="secondary.700" mb={2}>
-                {error.message}
+                {error?.message}
               </Text>
             )}
           </>
