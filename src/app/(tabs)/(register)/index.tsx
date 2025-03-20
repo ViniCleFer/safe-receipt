@@ -18,10 +18,6 @@ export default function SelectFormType() {
     navigate('/select-divergency-type');
   }, [navigate]);
 
-  // const handleCreateLaudoCrm = useCallback(() => {
-  //   navigate('/laudo-crm/58d40fbc-2848-4de7-83c0-a38e987d3313');
-  // }, [navigate]);
-
   const handleCreateCartaControle = useCallback(() => {
     navigate('/carta-controle');
   }, [navigate]);
@@ -49,7 +45,11 @@ export default function SelectFormType() {
           </HStack>
         </Card>
       </Pressable>
-      {/* <Pressable onPress={handleCreateLaudoCrm}>
+      {/* <Pressable
+        onPress={() => {
+          navigate('/laudo-crm/58d40fbc-2848-4de7-83c0-a38e987d3313');
+        }}
+      >
         <Card
           bg="white"
           mt="8px"

@@ -51,6 +51,7 @@ import {
   createCartaControleRequest,
   updateEvidenciasCartaControleRequest,
 } from '@/services/requests/cartas-controle/utils';
+import Title from '@/components/Title';
 
 const styles = StyleSheet.create({
   container: {
@@ -143,7 +144,9 @@ export default function CartaControle() {
       if (!result?.canceled && result?.assets?.length > 0) {
         const uri = result?.assets[0]?.uri!;
         const base64 = result?.assets[0]?.base64!;
-        const filename = result?.assets[0]?.fileName!;
+        const filename =
+          result?.assets[0]?.fileName ||
+          dayjs().format('DD-MM-YYYY[T]HH:mm:ss');
         const size = result?.assets[0]?.fileSize!;
 
         const mimetype = mime.getType(uri);
@@ -183,7 +186,7 @@ export default function CartaControle() {
 
         const mimetype = mime.getType(photo?.uri);
 
-        const filename = photo?.uri?.split('/')?.pop();
+        const filename = dayjs().format('DD-MM-YYYY[T]HH:mm:ss');
 
         const size = photo?.uri?.length;
 
@@ -357,9 +360,7 @@ export default function CartaControle() {
                 type: i?.type,
                 base64: i?.base64,
                 mimetype: i?.mimetype,
-                filename: `${dayjs().format(
-                  'DD/MM/YYYY[T]HH:mm:ss',
-                )}.${extension}`,
+                filename: `${i?.filename}.${extension}`,
               };
             })
           : [];
@@ -402,7 +403,9 @@ export default function CartaControle() {
           console.log('evidencia2 data', JSON.stringify(data, null, 2));
           console.log('evidencia2 error', JSON.stringify(error, null, 2));
 
-          evidenciasIds = [...evidenciasIds, data?.path!];
+          const path = data?.fullPath?.split('/')?.slice(3)?.join('/');
+
+          evidenciasIds = [...evidenciasIds, path!];
         }
 
         if (evidenciasIds?.length > 0) {
@@ -563,6 +566,7 @@ export default function CartaControle() {
       )}
       <ScrollScreenContainer subtitle="Carta Controle">
         <VStack px={2} space={6} mb="20%" pt={2}>
+          <Title>Carta Controle</Title>
           <Pressable
             backgroundColor="primary.700"
             px={2}

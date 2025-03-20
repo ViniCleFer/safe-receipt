@@ -66,6 +66,7 @@ import {
 import { getNextStepsByDivergencyType } from '@/utils/getNextStepsByDivergencyType';
 import { createDivergenceRequest } from '@/services/requests/divergences/utils';
 import { StackActions } from '@react-navigation/native';
+import Title from '@/components/Title';
 
 const styles = StyleSheet.create({
   container: {
@@ -284,7 +285,9 @@ export default function LaudoCrm() {
       if (!result?.canceled && result?.assets?.length > 0) {
         const uri = result?.assets[0]?.uri!;
         const base64 = result?.assets[0]?.base64!;
-        const filename = result?.assets[0]?.fileName!;
+        const filename =
+          result?.assets[0]?.fileName ||
+          dayjs().format('DD-MM-YYYY[T]HH:mm:ss');
         const size = result?.assets[0]?.fileSize!;
 
         const mimetype = mime.getType(uri);
@@ -324,7 +327,7 @@ export default function LaudoCrm() {
 
         const mimetype = mime.getType(photo?.uri);
 
-        const filename = photo?.uri?.split('/')?.pop();
+        const filename = dayjs().format('DD-MM-YYYY[T]HH:mm:ss');
 
         const size = photo?.uri?.length;
 
@@ -563,9 +566,7 @@ export default function LaudoCrm() {
                 type: i?.type,
                 base64: i?.base64,
                 mimetype: i?.mimetype,
-                filename: `${dayjs().format(
-                  'DD/MM/YYYY[T]HH:mm:ss',
-                )}.${extension}`,
+                filename: `${i?.filename}.${extension}`,
               };
             })
           : [];
@@ -577,7 +578,7 @@ export default function LaudoCrm() {
           const folderName = generateFolderName(
             'laudoCrm',
             response?.data[0]?.id,
-            null,
+            evidencia.type,
           );
           console.log('folderName', folderName);
 
@@ -606,7 +607,9 @@ export default function LaudoCrm() {
           console.log('evidencia2 data', JSON.stringify(data, null, 2));
           console.log('evidencia2 error', JSON.stringify(error, null, 2));
 
-          evidenciasIds = [...evidenciasIds, data?.path!];
+          const path = data?.fullPath?.split('/')?.slice(3)?.join('/');
+
+          evidenciasIds = [...evidenciasIds, path!];
         }
 
         if (evidenciasIds?.length > 0) {
@@ -833,6 +836,7 @@ export default function LaudoCrm() {
         />
       )}
       <ScrollScreenContainer subtitle="LAUDO CRM">
+        <Title>Laudo CRM</Title>
         <VStack px={2} space={6} mb="20%" pt={2}>
           <Box mb={1} width="100%">
             <Text mb={3} color="gray.750">
@@ -1180,7 +1184,7 @@ export default function LaudoCrm() {
 
           <Box mb={1}>
             <Text mb={-2} color="gray.750">
-              Nota Fiscal:
+              Nota Fiscal/DT:
             </Text>
             <Input
               w="full"
@@ -1436,11 +1440,10 @@ export default function LaudoCrm() {
                           source={{ uri: image?.uri }}
                           alt="image"
                           size="sm"
-                          width="80px"
-                          height="30px"
+                          width="100px"
+                          height="100px"
+                          borderRadius={4}
                         />
-
-                        <Text>{index}</Text>
                       </HStack>
                       <Pressable
                         onPress={() => {
@@ -1510,14 +1513,13 @@ export default function LaudoCrm() {
                       <HStack space={2} alignItems="center">
                         <Image
                           key={index}
-                          source={{ uri: image.uri }}
+                          source={{ uri: image?.uri }}
                           alt="image"
                           size="sm"
-                          width="80px"
-                          height="30px"
+                          width="100px"
+                          height="100px"
+                          borderRadius={4}
                         />
-
-                        <Text>{index}</Text>
                       </HStack>
                       <Pressable
                         onPress={() => {
@@ -1589,14 +1591,13 @@ export default function LaudoCrm() {
                       <HStack space={2} alignItems="center">
                         <Image
                           key={index}
-                          source={{ uri: image.uri }}
+                          source={{ uri: image?.uri }}
                           alt="image"
                           size="sm"
-                          width="80px"
-                          height="30px"
+                          width="100px"
+                          height="100px"
+                          borderRadius={4}
                         />
-
-                        <Text>{index}</Text>
                       </HStack>
                       <Pressable
                         onPress={() => {
@@ -1668,14 +1669,13 @@ export default function LaudoCrm() {
                       <HStack space={2} alignItems="center">
                         <Image
                           key={index}
-                          source={{ uri: image.uri }}
+                          source={{ uri: image?.uri }}
                           alt="image"
                           size="sm"
-                          width="80px"
-                          height="30px"
+                          width="100px"
+                          height="100px"
+                          borderRadius={4}
                         />
-
-                        <Text>{index}</Text>
                       </HStack>
                       <Pressable
                         onPress={() => {

@@ -8,5 +8,9 @@ export function generateFolderName(
   entityId: string, // laudoCrmId, divergenciaId, cartaControleId
   tipoEvidencia?: TipoEvidencia | TipoEvidenciaCartaControle | null,
 ): string {
-  return `${bucketName}/${initialPath}/${entityId}/${tipoEvidencia}`;
+  if (tipoEvidencia) {
+    return `${bucketName}/${initialPath}/${entityId}/${tipoEvidencia}`;
+  } else {
+    return `${bucketName}/${initialPath}/${entityId}`;
+  }
 }

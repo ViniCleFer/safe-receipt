@@ -1,33 +1,18 @@
-import React, {
-  Fragment,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import {
-  type CameraPictureOptions,
-  CameraView,
-  useCameraPermissions,
-} from 'expo-camera';
-import * as ImagePicker from 'expo-image-picker';
-import mime from 'mime';
 import {
   Box,
   HStack,
   Icon,
-  Image,
   Input,
   Pressable,
   Radio,
   Select,
   Text,
   useTheme,
-  View,
   VStack,
 } from 'native-base';
-import { Alert, StyleSheet, TouchableOpacity } from 'react-native';
+import { Alert } from 'react-native';
 import { shade } from 'polished';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -38,7 +23,6 @@ import {
   useLocalSearchParams,
   useNavigationContainerRef,
 } from 'expo-router';
-import { decode } from 'base64-arraybuffer';
 import { mask } from 'remask';
 import { StackActions } from '@react-navigation/native';
 import dayjs from 'dayjs';
@@ -52,15 +36,7 @@ import { InputNormal } from '@/components/InputNormal';
 import { SelectWithLabel } from '@/components/SelectWithLabel';
 import { ScrollScreenContainer } from '@/components/ScrollScreenContainer';
 
-import {
-  DivergenciaPost,
-  TipoDivergencia,
-} from '@/services/requests/divergences/types';
-import { createDivergenceRequest } from '@/services/requests/divergences/utils';
-import { supabase } from '@/lib/supabase';
-import { generateFolderName } from '@/utils/generateFoldername';
 import useAuthStore from '@/store/auth';
-import { getNextStepsByDivergencyType } from '@/utils/getNextStepsByDivergencyType';
 import { listaCDsOrigem, listaUPsOrigem } from '@/utils/listaUPs';
 import useFormPtpStore from '@/store/forms-ptp';
 import { RadioInput } from '@/components/RadioInput';
@@ -81,6 +57,7 @@ import { formatEnunciadoList } from '@/utils/formatEnunciadoList';
 import { createFormPtpRequest } from '@/services/requests/forms-ptp/utils';
 import { FormPtpAnswerPost } from '@/services/requests/form-ptp-answers/types';
 import { createFormPtpAnswerRequest } from '@/services/requests/form-ptp-answers/utils';
+import Title from '@/components/Title';
 
 const formAnswersSchema = z.object({
   respostas: z
@@ -456,21 +433,45 @@ export default function Divergency() {
           haNaoConformidade &&
           getSpecificationType()?.type === TipoEspecificacao.RECEBIMENTO
         ) {
+          const lotesMapped = itensProcessados
+            ?.map(item => (item?.lote ? item?.lote?.trim() : item?.lote))
+            ?.filter(Boolean) as string[];
+          const codigoProdutosMapped = itensProcessados
+            ?.map(item =>
+              tipoCodigoProduto === TipoCodigoProduto.EXCLUSIVO
+                ? item?.codigoProdutos
+                : item?.codigoProdutos?.trim(),
+            )
+            ?.filter(Boolean) as string[];
+          const qtdCaixasNaoConformesMapped = itensProcessados
+            ?.map(item =>
+              item?.qtdCaixasNaoConformes
+                ? item?.qtdCaixasNaoConformes
+                : item?.qtdCaixasNaoConformes,
+            )
+            ?.filter(Boolean) as string[];
+          const detalheNaoConformidadeMapped = itensProcessados
+            ?.map(item => item?.detalheNaoConformidade)
+            ?.filter(Boolean)
+            ?.flatMap(item => item) as string[];
+
+          console.log('lotesMapped', lotesMapped);
+          console.log('codigoProdutosMapped', codigoProdutosMapped);
+          console.log(
+            'qtdCaixasNaoConformesMapped',
+            qtdCaixasNaoConformesMapped,
+          );
+          console.log(
+            'detalheNaoConformidadeMapped',
+            detalheNaoConformidadeMapped,
+          );
+
           setSelectedFormPtp({
             ...(selectedFormPtp as any),
-            lotes: itensProcessados
-              ?.map(item => item?.lote?.trim())
-              ?.filter(Boolean) as string[],
-            codigoProdutos: itensProcessados
-              ?.map(item => item?.codigoProdutos?.trim())
-              ?.filter(Boolean) as string[],
-            qtdCaixasNaoConformes: itensProcessados
-              ?.map(item => item?.qtdCaixasNaoConformes?.trim())
-              ?.filter(Boolean) as string[],
-            detalheNaoConformidade: itensProcessados
-              ?.map(item => item?.detalheNaoConformidade)
-              ?.filter(Boolean)
-              ?.flatMap(item => item) as string[],
+            lotes: lotesMapped,
+            codigoProdutos: codigoProdutosMapped,
+            qtdCaixasNaoConformes: qtdCaixasNaoConformesMapped,
+            detalheNaoConformidade: detalheNaoConformidadeMapped,
           });
 
           return Alert.alert(
@@ -574,6 +575,7 @@ export default function Divergency() {
       )}
       <ScrollScreenContainer subtitle="PTP Logístico - RECEBIMENTO DE TRANSFERÊNCIAS EXTERNA C-PTP0046">
         <VStack px={2} space={6} mb={4} pt={2}>
+          <Title>{getSpecificationType().text}</Title>
           <Pressable
             // onPress={() => {
             //   setIsDatePickerVisible(prevState => !prevState);
@@ -640,7 +642,7 @@ export default function Divergency() {
           {getSpecificationType()?.type !== TipoEspecificacao.ARMAZENAMENTO && (
             <Box mb={1}>
               <Text mb={-2} color="gray.750">
-                Nota Fiscal:
+                Nota Fiscal/DT:
               </Text>
               <Input
                 w="full"
@@ -793,13 +795,7 @@ export default function Divergency() {
                     {enunciadosList?.map((enunciado, grupoIndex) => {
                       return (
                         <Fragment key={grupoIndex}>
-                          <Text
-                            color="primary.700"
-                            fontSize="2xl"
-                            fontWeight="bold"
-                          >
-                            {enunciado?.grupoFormatado}
-                          </Text>
+                          <Title>{enunciado?.grupoFormatado}</Title>
                           {enunciado?.enunciados?.map(item => {
                             const index = item?.index;
 
