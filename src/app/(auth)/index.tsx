@@ -258,7 +258,7 @@ export default function SignIn() {
         leftIcon={<Icon as={MaterialIcons} name="login" size="md" />}
       />
 
-      <Link
+      {/* <Link
         onPress={() => {
           router.navigate('/sign-up');
         }}
@@ -266,7 +266,7 @@ export default function SignIn() {
         padding={2}
       >
         Cadastre-se
-      </Link>
+      </Link> */}
 
       <Link
         onPress={() => {
