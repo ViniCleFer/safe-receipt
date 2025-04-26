@@ -18,7 +18,7 @@ export const Backdrop = ({
     <PresenceTransition
       style={{
         position: 'absolute',
-        zIndex: 200,
+        zIndex: 900,
         top: 0,
         bottom: 0,
         left: 0,

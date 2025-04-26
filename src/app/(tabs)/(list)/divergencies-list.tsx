@@ -97,7 +97,7 @@ export default function DivergenciesList() {
       {loading ? (
         <Loading mt="80%" />
       ) : (
-        <View mb="20%">
+        <View mb="20%" pt={3}>
           {divergenciesList?.length > 0 ? (
             divergenciesList?.map(item => (
               <Card key={item?.id} p={4} borderRadius="4" mb={4}>

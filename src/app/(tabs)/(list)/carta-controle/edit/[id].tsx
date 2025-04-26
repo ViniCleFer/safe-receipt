@@ -14,7 +14,6 @@ import {
   Image,
   Input,
   Pressable,
-  Radio,
   Select,
   Text,
   useTheme,
@@ -24,8 +23,12 @@ import {
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, StyleSheet, TouchableOpacity } from 'react-native';
 import { shade } from 'polished';
-import { router, useNavigationContainerRef } from 'expo-router';
-import { decode } from 'base64-arraybuffer';
+import {
+  router,
+  useLocalSearchParams,
+  useNavigationContainerRef,
+} from 'expo-router';
+import { decode, encode } from 'base64-arraybuffer';
 import { StackActions } from '@react-navigation/native';
 
 import Title from '@/components/Title';
@@ -43,11 +46,12 @@ import { supabase } from '@/lib/supabase';
 import useAuthStore from '@/store/auth';
 
 import {
-  CartaControlePost,
+  CartaControlePut,
   TipoEvidenciaCartaControle,
 } from '@/services/requests/cartas-controle/types';
 import {
-  createCartaControleRequest,
+  updateCartaControleRequest,
+  getCartasControleWithEvidencesByIdRequest,
   updateEvidenciasCartaControleRequest,
 } from '@/services/requests/cartas-controle/utils';
 import { Turno } from '@/services/requests/laudos/types';
@@ -73,8 +77,10 @@ const styles = StyleSheet.create({
 
 export default function CartaControle() {
   const { colors } = useTheme();
-  const { replace } = router;
+  const { replace, back } = router;
   const rootNavigation = useNavigationContainerRef();
+
+  const { id } = useLocalSearchParams<{ id: string }>();
 
   const user = useAuthStore(state => state.user);
 
@@ -84,6 +90,7 @@ export default function CartaControle() {
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [imagesList, setImagesList] = useState<any[]>([]);
 
+  // const [cartaControle, setCartaControle] = useState<any>(null);
   const [dataIdentificacao, setDataIdentificacao] = useState(new Date());
   const [turno, setTurno] = useState('');
   const [documentoTransporte, setDocumentoTransporte] = useState('');
@@ -94,6 +101,7 @@ export default function CartaControle() {
   const [observacoes, setObservacoes] = useState(''); // inicial
   const [tipoEvidencia, setTipoEvidencia] =
     useState<TipoEvidenciaCartaControle | null>(null);
+  const [status, setStatus] = useState('');
 
   const [permission, requestPermission] = useCameraPermissions();
 
@@ -106,6 +114,67 @@ export default function CartaControle() {
   if (!permission?.granted) {
     console.log('Não permitiu');
   }
+
+  useEffect(() => {
+    if (id) {
+      getCartasControleWithEvidencesByIdRequest(id)
+        .then(response => {
+          console.log(
+            'response getCartasControleByIdRequest',
+            JSON.stringify(response, null, 2),
+          );
+
+          if (response?.status === 200) {
+            const data = response?.data[0];
+
+            const turno = listaTurnos?.find(
+              t => t?.label === data?.turno,
+            )?.value;
+
+            setDataIdentificacao(data?.dataIdentificacao);
+            setTurno(turno!);
+            setDocumentoTransporte(data?.documentoTransporte);
+            setRemessa(data?.remessa);
+            setConferente(data?.conferente);
+            setDoca(data?.doca);
+            setCapacidadeVeiculo(data?.capacidadeVeiculo);
+            setObservacoes(data?.observacoes);
+            setStatus(data?.status);
+
+            const evidencias = data?.evidencias;
+
+            if (evidencias?.length > 0) {
+              const evidenciasFormatted = evidencias
+                ?.map((e: any) => e.data)
+                .flatMap((ef: any) => ef)
+                .map((e: any) => {
+                  const mimetype = mime.getType(e?.url);
+                  const type = e?.tipo.split('/')[0];
+                  const filename = e?.tipo.split('/')[1];
+
+                  return {
+                    id: e?.tipo,
+                    uri: e?.url,
+                    type,
+                    mimetype,
+                    filename,
+                    base64: '',
+                    size: 0,
+                  };
+                });
+
+              console.log(
+                'evidenciasFormatted',
+                JSON.stringify(evidenciasFormatted, null, 2),
+              );
+
+              setImagesList(evidenciasFormatted);
+            }
+          }
+        })
+        .catch(err => console.error('Page Error Get user', err));
+    }
+  }, [id]);
 
   const handleBack = useCallback(() => {
     setDataIdentificacao(new Date());
@@ -122,9 +191,10 @@ export default function CartaControle() {
     setIsCameraActive(false);
     setLoadingPreview(false);
 
-    rootNavigation.dispatch(StackActions.popToTop());
-    replace('/(tabs)/(list)');
-  }, [replace, rootNavigation, StackActions]);
+    if (id) {
+      return router.back();
+    }
+  }, [replace, rootNavigation, StackActions, back]);
 
   const pickImageInLibrary = async (
     tipoEvidencia: TipoEvidenciaCartaControle,
@@ -147,8 +217,9 @@ export default function CartaControle() {
         const size = result?.assets[0]?.fileSize!;
 
         const mimetype = mime.getType(uri);
-
+        const extension = mime.getExtension(mimetype!);
         // console.log('result', JSON.stringify(result, null, 2));
+        // console.log('size', size);
 
         setImagesList(prevState => [
           ...prevState,
@@ -156,7 +227,7 @@ export default function CartaControle() {
             uri,
             base64,
             mimetype,
-            filename,
+            filename: `${filename}.${extension}`,
             size,
             type: tipoEvidencia,
             id: new Date().getTime(),
@@ -188,8 +259,10 @@ export default function CartaControle() {
         const size = photo?.uri?.length;
 
         // console.log('photo', JSON.stringify(photo, null, 2));
+        // console.log('tipoEvidencia', tipoEvidencia);
+        // console.log('size', size);
 
-        console.log('tipoEvidencia', tipoEvidencia);
+        const extension = mime.getExtension(mimetype!);
 
         setImagesList(prevState => [
           ...prevState,
@@ -198,7 +271,7 @@ export default function CartaControle() {
             base64: photo?.base64,
             mimetype,
             size,
-            filename,
+            filename: `${filename}.${extension}`,
             type: tipoEvidencia,
             id: new Date().getTime(),
           },
@@ -328,41 +401,30 @@ export default function CartaControle() {
       );
     }
 
-    const data: CartaControlePost = {
+    const data: CartaControlePut = {
       dataIdentificacao,
       turno: turno as Turno,
       documentoTransporte,
       remessa,
-      doca: doca ? doca : null,
       conferente: conferente ? conferente : null,
+      doca: doca ? doca : null,
       capacidadeVeiculo: capacidadeVeiculo ? capacidadeVeiculo : null,
       observacoes: observacoes ? observacoes : null,
       evidencias: [],
       user_id: user?.id!,
       status: 'EM_ANDAMENTO',
+      id,
     };
 
     // console.log('data', JSON.stringify(opa, null, 2));
 
-    const response = await createCartaControleRequest(data);
+    const response = await updateCartaControleRequest(data, id);
     // console.log('response', JSON.stringify(response, null, 2));
 
-    if (response?.status === 201 && response?.data?.length > 0) {
+    if (response?.status === 200 && response?.data?.length > 0) {
       // console.log('response', JSON.stringify(response, null, 2));
 
-      const evidencias =
-        imagesList?.length > 0
-          ? imagesList?.map(i => {
-              const extension = mime.getExtension(i?.mimetype);
-
-              return {
-                type: i?.type,
-                base64: i?.base64,
-                mimetype: i?.mimetype,
-                filename: `${i?.filename}.${extension}`,
-              };
-            })
-          : [];
+      const evidencias = imagesList?.length > 0 ? imagesList : [];
 
       // console.log('evidencias', JSON.stringify(evidencias, null, 2));
 
@@ -377,37 +439,43 @@ export default function CartaControle() {
           );
           // console.log('folderName', folderName);
 
-          const { data, error } = await supabase.storage
-            .from(folderName)
-            .upload(evidencia?.filename, decode(evidencia?.base64), {
-              contentType: evidencia?.mimetype,
-              upsert: false,
-            });
+          if (evidencia?.base64 === '') {
+            evidenciasIds = [...evidenciasIds, evidencia?.id];
+          } else {
+            const { data, error } = await supabase.storage
+              .from(folderName)
+              .upload(evidencia?.filename, decode(evidencia?.base64), {
+                contentType: evidencia?.mimetype,
+                upsert: false,
+              });
 
-          delete evidencia.base64;
+            delete evidencia.base64;
 
-          // console.log('evidencia', JSON.stringify(evidencia, null, 2));
+            // console.log('evidencia', JSON.stringify(evidencia, null, 2));
 
-          // console.log('evidencia data', JSON.stringify(data, null, 2));
-          // console.log('evidencia error', JSON.stringify(error, null, 2));
+            // console.log('evidencia data', JSON.stringify(data, null, 2));
+            // console.log('evidencia error', JSON.stringify(error, null, 2));
 
-          if (error !== null) {
-            setIsLoading(false);
-            Alert.alert(
-              'Ops!',
-              'Ocorreu um erro ao salvar as Evidências do Carta Controle, tente novamente mais tarde.',
-            );
+            if (error !== null) {
+              setIsLoading(false);
+              Alert.alert(
+                'Ops!',
+                'Ocorreu um erro ao salvar as Evidências do Carta Controle, tente novamente mais tarde.',
+              );
+            }
+
+            // console.log('evidencia2 data', JSON.stringify(data, null, 2));
+            // console.log('evidencia2 error', JSON.stringify(error, null, 2));
+
+            const path = data?.fullPath?.split('/')?.slice(3)?.join('/');
+
+            evidenciasIds = [...evidenciasIds, path!];
           }
-
-          // console.log('evidencia2 data', JSON.stringify(data, null, 2));
-          // console.log('evidencia2 error', JSON.stringify(error, null, 2));
-
-          const path = data?.fullPath?.split('/')?.slice(3)?.join('/');
-
-          evidenciasIds = [...evidenciasIds, path!];
         }
 
         if (evidenciasIds?.length > 0) {
+          // console.log('evidenciasIds', JSON.stringify(evidenciasIds, null, 2));
+
           const isUnique = evidenciasIds.filter(
             (value, index, self) => self.indexOf(value) === index,
           );
@@ -459,6 +527,7 @@ export default function CartaControle() {
 
     setIsLoading(false);
   }, [
+    id,
     dataIdentificacao,
     turno,
     documentoTransporte,
@@ -1299,7 +1368,7 @@ export default function CartaControle() {
               }}
               onPress={handleSaveLaudoCrm}
               isLoading={isLoading}
-              disabled={isLoading}
+              disabled={isLoading || status === 'FINALIZADO'}
               leftIcon={<Icon as={MaterialIcons} name="save" size="md" />}
             />
           </HStack>

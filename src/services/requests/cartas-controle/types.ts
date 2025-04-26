@@ -26,11 +26,12 @@ export interface CartaControle {
   turno: Turno;
   documentoTransporte: string;
   remessa: string;
-  conferente: string;
-  doca: string;
-  capacidadeVeiculo: string;
+  conferente: string | null;
+  doca: string | null;
+  capacidadeVeiculo: string | null;
   evidencias: string[];
-  observacoes: string;
+  observacoes: string | null;
+  status: 'EM_ANDAMENTO' | 'FINALIZADO' | 'CANCELADO';
   user_id: string;
   created_at: Date;
   updated_at: Date;
@@ -42,11 +43,12 @@ export interface CartaControlePost {
   turno: Turno;
   documentoTransporte: string;
   remessa: string;
-  conferente: string;
-  doca: string;
-  capacidadeVeiculo: string;
+  conferente: string | null;
+  doca: string | null;
+  capacidadeVeiculo: string | null;
   evidencias: string[];
-  observacoes: string;
+  observacoes: string | null;
+  status: 'EM_ANDAMENTO' | 'FINALIZADO' | 'CANCELADO';
   user_id: string;
 }
 

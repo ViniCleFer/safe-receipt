@@ -129,8 +129,8 @@ export const Header = ({ ...rest }: HeaderProps) => {
       // justifyContent={hasNavigation ? 'space-between' : 'flex-start'}
       justifyContent={'space-between'}
       alignItems="center"
-      pt={Platform.OS === 'android' ? '36px' : '50px'}
-      shadow="8"
+      pt={Platform.OS === 'android' ? '36px' : '70px'}
+      // shadow="8"
       {...rest}
     >
       <HStack alignItems="center">

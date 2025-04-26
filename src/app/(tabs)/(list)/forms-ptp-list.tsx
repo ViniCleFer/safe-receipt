@@ -74,7 +74,7 @@ export default function FormsPtpList() {
       {loading ? (
         <Loading mt="80%" />
       ) : (
-        <View mb="20%">
+        <View mb="20%" pt={3}>
           {formsPtpList?.length > 0 ? (
             formsPtpList?.map(item => (
               <Card key={item?.id} p={4} borderRadius="4" mb={4}>
