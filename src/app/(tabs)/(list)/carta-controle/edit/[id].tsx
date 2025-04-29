@@ -369,36 +369,33 @@ export default function CartaControle() {
       JSON.stringify(imagesListPlacaVeiculo?.length, null, 2),
     );
 
-    // if (
-    //   imagesListCargaDoca?.length === 0 ||
-    //   imagesListOrdemCarregamento?.length === 0 ||
-    //   imagesListInicioCarregamento?.length === 0 ||
-    //   imagesListMeioCarregamento?.length === 0 ||
-    //   imagesListFimCarregamento?.length === 0 ||
-    //   imagesListPlacaVeiculo?.length === 0
-    // ) {
-    //   setIsLoading(false);
-    //   return Alert.alert(
-    //     'Carta Controle',
-    //     'Por favor, deve ter pelo menos uma evidência de cada tipo na Carta Controle.',
-    //   );
-    // }
-
-    if (
-      !dataIdentificacao ||
-      !turno ||
-      !documentoTransporte ||
-      !remessa
-      // !remessa ||
-      // !conferente ||
-      // !doca ||
-      // !capacidadeVeiculo
-    ) {
+    if (!dataIdentificacao || !turno || !documentoTransporte || !remessa) {
       setIsLoading(false);
       return Alert.alert(
         'Carta Controle',
         'Por favor, preencha os campos TURNO, DT e REMESSA para salvar a Carta Controle.',
       );
+    }
+
+    let status: 'EM_ANDAMENTO' | 'FINALIZADO' | 'CANCELADO' = 'EM_ANDAMENTO';
+
+    if (
+      imagesListCargaDoca?.length === 0 ||
+      imagesListOrdemCarregamento?.length === 0 ||
+      imagesListInicioCarregamento?.length === 0 ||
+      imagesListMeioCarregamento?.length === 0 ||
+      imagesListFimCarregamento?.length === 0 ||
+      imagesListPlacaVeiculo?.length === 0 ||
+      !dataIdentificacao ||
+      !turno ||
+      !remessa ||
+      !conferente ||
+      !doca ||
+      !capacidadeVeiculo
+    ) {
+      status = 'EM_ANDAMENTO';
+    } else {
+      status = 'FINALIZADO';
     }
 
     const data: CartaControlePut = {
@@ -412,7 +409,7 @@ export default function CartaControle() {
       observacoes: observacoes ? observacoes : null,
       evidencias: [],
       user_id: user?.id!,
-      status: 'EM_ANDAMENTO',
+      status,
       id,
     };
 
