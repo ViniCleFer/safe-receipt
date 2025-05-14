@@ -2,7 +2,7 @@
   "expo": {
     "name": "safe-receipt",
     "slug": "safe-receipt",
-    "version": "1.0.23",
+    "version": "1.0.24",
     "orientation": "default",
     "icon": "./assets/images/icon-vfcode.png",
     "scheme": "myapp",
@@ -23,7 +23,7 @@
         "android.permission.RECORD_AUDIO"
       ],
       "package": "com.viniciuscf.safereceipt",
-      "versionCode": 23
+      "versionCode": 24
     },
     "web": {
       "bundler": "metro",
