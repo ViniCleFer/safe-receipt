@@ -92,6 +92,8 @@ export default function SignIn() {
       });
 
       if (error) {
+        setIsLoading(false);
+
         Alert.alert(
           'Login',
           'Erro ao logar um usuário, por favor tente novamente mais tarde',
@@ -104,6 +106,39 @@ export default function SignIn() {
 
       if (session) {
         const { access_token, refresh_token, user } = session;
+
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', user?.id)
+          .single();
+
+        // console.log('SignIn => handleLogin', JSON.stringify(userData, null, 2));
+
+        if (userError) {
+          setIsLoading(false);
+          console.error(
+            'SignIn => User Permissions',
+            JSON.stringify(error?.message, null, 2),
+          );
+
+          return Alert.alert(
+            'Login',
+            'Erro ao buscar um usuário pelo ID, por favor tente novamente mais tarde',
+          );
+        }
+
+        if (
+          userData?.permissions?.length === 0 ||
+          !userData?.permissions?.includes('MOBILE')
+        ) {
+          setIsLoading(false);
+
+          return Alert.alert(
+            'Login',
+            'Usuário sem permissão para acessar o aplicativo!',
+          );
+        }
 
         const tokens = {
           access_token,

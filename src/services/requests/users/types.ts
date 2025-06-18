@@ -10,7 +10,8 @@ export interface User {
   companies_ids?: string[];
   status: 'US1' | 'US2' | 'US3';
   hashedRefreshToken: string | null;
-  profile: 'UN1' | 'UN2' | 'UN3' | 'UN4';
+  profile: 'ADMIN' | 'MEMBER';
+  permissions: 'WEB' | 'MOBILE';
   created_at: Date;
   updated_at: Date;
   canceled_at: Date;
